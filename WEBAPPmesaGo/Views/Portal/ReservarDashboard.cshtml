@@ -1,0 +1,373 @@
+﻿@model IEnumerable<WEBAPPmesaGo.Models.Reserva>
+@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+@{
+    ViewData["Title"] = "Mis Reservas";
+    string nombreUsuario = HttpContextAccessor.HttpContext.Session.GetString("UserName");
+    string cuponActivo = HttpContextAccessor.HttpContext.Session.GetString("CuponActivo");
+
+    // Datos para notificaciones
+    var ultimaReserva = Model.FirstOrDefault();
+    string estadoUltima = ultimaReserva?.Estado ?? "";
+    var idUltima = ultimaReserva?.Id ?? 0;
+
+    // Filtro para la lista visual (solo las 3 más recientes)
+    var reservasRecientes = Model.Take(3).ToList();
+}
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+<style>
+    /* Contenedor del mapa */
+    .map-wrapper {
+        height: 300px; /* Un poco más alto para que se vea bien */
+        border-radius: 15px;
+        overflow: hidden;
+        position: relative;
+        border: 1px solid #eee;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    /* El mapa en sí */
+    #map {
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+    }
+    /* La tarjeta blanca flotante */
+    .floating-address-card {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%); /* Centrado perfecto */
+        background-color: rgba(255, 255, 255, 0.98); /* Casi blanco puro */
+        padding: 1.5rem;
+        border-radius: 1rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15); /* Sombra elegante */
+        text-align: center;
+        width: 280px; /* Ancho fijo */
+        z-index: 1000; /* Por encima del mapa */
+    }
+    /* Botón naranja personalizado */
+    .btn-como-llegar {
+        background-color: #FF6600;
+        color: white;
+        border: none;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        padding: 10px 20px;
+        transition: all 0.3s ease;
+    }
+
+        .btn-como-llegar:hover {
+            background-color: #e55b00;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 102, 0, 0.3);
+        }
+</style>
+
+<div class="container mt-4 mb-5">
+    <div class="menu-tabs mb-4 text-center">
+        <a asp-action="Menu" class="menu-tab-item text-decoration-none text-muted">NUESTRO MENÚ</a>
+        <span class="menu-tab-item active" style="border-bottom: 4px solid var(--color-primary);">RESERVAS</span>
+        <a asp-controller="Cupones" asp-action="Index" class="menu-tab-item text-decoration-none text-muted">CUPONES</a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-5">
+            <div class="card border-0 shadow-sm p-3 h-100 bg-white rounded-4">
+                <div class="card-body">
+                    <h5 class="fw-bold text-dark mb-4" style="font-family: 'Arial Black';"><i class="fa-solid fa-calendar-plus text-primary me-2"></i> NUEVA RESERVA</h5>
+
+                    @if (!string.IsNullOrEmpty(cuponActivo))
+                    {
+                        <div class="alert alert-success d-flex align-items-center p-3 mb-4 shadow-sm border-0 rounded-3" style="background-color: #d1e7dd;">
+                            <i class="fa-solid fa-ticket fa-2x me-3 text-success"></i>
+                            <div>
+                                <div class="fw-bold text-success">¡CUPÓN APLICADO!</div>
+                                <div style="font-size: 0.9rem; color: #0f5132;">Código: <strong>@cuponActivo</strong></div>
+                            </div>
+                        </div>
+                    }
+
+                    <form asp-action="CrearNuevaReserva" method="post" id="formReserva">
+                        <div class="mb-3">
+                            <label class="small text-muted fw-bold mb-1">NOMBRE</label>
+                            <input type="text" class="form-control form-control-lg bg-light border-0" value="@nombreUsuario" readonly />
+                        </div>
+                        <div class="mb-3">
+                            <label class="small text-muted fw-bold mb-1">TELÉFONO</label>
+                            <input name="telefono" id="inputTelefono" type="text" class="form-control form-control-lg bg-light border-0 val-numeros" placeholder="099..." required maxlength="10" title="Ingresa 10 números" />
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label class="small text-muted fw-bold mb-1">FECHA</label>
+                                <input name="fechaSolo" type="date" class="form-control form-control-lg bg-light border-0" required min="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                            </div>
+                            <div class="col-6">
+                                <label class="small text-muted fw-bold mb-1">HORA</label>
+                                <input name="horaSolo" id="inputHora" type="time" class="form-control form-control-lg bg-light border-0" required />
+                                <small class="text-muted d-block mt-1" style="font-size: 0.75rem;">Horario: 10:00 AM - 07:00 PM</small>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="small text-muted fw-bold mb-1">PERSONAS</label>
+                            <input name="personas" type="number" min="1" max="20" class="form-control form-control-lg bg-light border-0 val-numeros" value="2" />
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 fw-bold text-white py-3 rounded-pill shadow-sm" style="letter-spacing: 1px;">
+                            RESERVAR MESA
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-7">
+            <div class="d-flex justify-content-between align-items-center mb-3 px-1">
+                <h5 class="fw-bold text-dark m-0" style="font-family: 'Arial Black';">ACTIVIDAD RECIENTE</h5>
+                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#historialModal">
+                    <i class="fa-solid fa-clock-rotate-left me-1"></i> Ver Historial
+                </button>
+            </div>
+
+            <div class="mb-4">
+                @if (!reservasRecientes.Any())
+                {
+                    <div class="text-center text-muted py-5 bg-white rounded-4 shadow-sm border-0">
+                        <i class="fa-regular fa-calendar x-fa-3x mb-3 text-secondary opacity-50" style="font-size: 3rem;"></i><br>
+                        <h6 class="fw-bold">Sin actividad reciente</h6>
+                        <p class="small mb-0">Tus próximas reservas aparecerán aquí.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="list-group shadow-sm rounded-4 overflow-hidden border-0">
+                        @foreach (var item in reservasRecientes)
+                        {
+                            string claseBorde = "";
+                            if (item.Estado == "Pendiente") { claseBorde = "border-warning"; }
+                            else if (item.Estado == "Confirmada") { claseBorde = "border-success"; }
+                            else { claseBorde = "border-danger"; }
+
+                            <div class="list-group-item border-0 p-3 mb-1 bg-white border-start border-4 @claseBorde d-flex justify-content-between align-items-center">
+                                <div>
+                                    @if (item.Estado == "Confirmada")
+                                    {
+                                        <span class="badge bg-success bg-opacity-10 text-success border border-success mb-1 px-2">CONFIRMADA <i class="fa-solid fa-check ms-1"></i></span>
+                                    }
+                                    else if (item.Estado == "Pendiente")
+                                    {
+
+                                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning mb-1 px-2">PENDIENTE <i class="fa-solid fa-clock ms-1"></i></span>
+                                    }
+                                    else
+                                    {
+
+                                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger mb-1 px-2">CANCELADA</span>
+                                    }
+
+                                    <h6 class="fw-bold mb-0 mt-2 text-dark">@item.FechaHora.ToString("dddd, dd MMMM") <span class="text-muted">|</span> @item.FechaHora.ToString("HH:mm")</h6>
+                                    <small class="text-muted fw-bold"><i class="fa-solid fa-user-group me-1"></i> Mesa para @item.NumeroPersonas</small>
+                                </div>
+
+                                @if (item.Estado == "Pendiente")
+                                {
+                                    <form asp-action="CancelarMiReserva" asp-route-id="@item.Id" method="post">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold" onclick="return confirm('¿Seguro quieres cancelar?');">
+                                            Cancelar
+                                        </button>
+                                    </form>
+                                }
+                                else if (item.Estado == "Confirmada")
+                                {
+                                    <div class="text-success fw-bold d-flex align-items-center rounded-pill bg-success bg-opacity-10 px-3 py-1">
+                                        <i class="fa-solid fa-thumbs-up me-2"></i> ¡Listo!
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mt-4">
+                <div class="card-body p-0">
+                    <div class="map-wrapper">
+                        <div id="map"></div>
+
+                        <div class="floating-address-card">
+                            <i class="fa-solid fa-location-dot fa-3x text-primary mb-3"></i>
+                            <h5 class="fw-bold mb-1 lh-sm text-dark" style="font-family: 'Arial Black';">Av. Portugal y República del Salvador</h5>
+                            <p class="text-muted mb-4 small fw-bold">QUITO - ECUADOR</p>
+
+                            <a href="https://www.google.com/maps/dir/?api=1&destination=-0.1817303,-78.4803087"
+                               target="_blank"
+                               class="btn btn-como-llegar rounded-pill w-100 shadow-sm">
+                                <i class="fa-solid fa-map-location-dot me-2"></i> CÓMO LLEGAR
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="historialModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 rounded-4 shadow-lg">
+            <div class="modal-header border-0 pb-0 pt-4 px-4">
+                <h5 class="modal-title fw-bold" style="font-family: 'Arial Black';">HISTORIAL COMPLETO</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                @if (!Model.Any())
+                {
+                    <div class="text-center text-muted py-5">Aún no tienes historial.</div>
+                }
+                else
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var item in Model)
+                        {
+                            <div class="list-group-item px-0 py-3 border-bottom">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="fw-bold mb-0 text-dark">@item.FechaHora.ToString("dd/MM/yyyy")</h6>
+                                    @if (item.Estado == "Confirmada")
+                                    {
+                                        <span class="badge bg-success text-white">CONFIRMADA</span>
+                                    }
+                                    else if (item.Estado == "Pendiente")
+                                    {
+
+                                        <span class="badge bg-warning text-dark">PENDIENTE</span>
+                                    }
+                                    else
+                                    {
+
+                                        <span class="badge bg-danger text-white">CANCELADA</span>
+                                    }
+                                </div>
+                                <div class="d-flex justify-content-between small text-muted fw-bold">
+                                    <span>Hora: @item.FechaHora.ToString("HH:mm")</span>
+                                    <span><i class="fa-solid fa-user me-1"></i> @item.NumeroPersonas personas</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+            <div class="modal-footer border-0 pt-0 px-4 pb-4">
+                <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    // --- VALIDACIÓN DE HORARIO ---
+    document.getElementById('inputHora').addEventListener('change', function() {
+        // La hora viene en formato "HH:mm"
+        const horaSeleccionada = this.value; 
+        if (!horaSeleccionada) return;
+
+        const [horas, minutos] = horaSeleccionada.split(':').map(Number);
+        
+        // Rango permitido: 10:00 - 19:00 (7 PM)
+        const horaApertura = 10;
+        const horaCierre = 19; 
+
+        // Verificamos si está fuera del rango
+        // Menor a 10 O mayor a 19 (o 19 con minutos > 0)
+        if (horas < horaApertura || horas > horaCierre || (horas === horaCierre && minutos > 0)) {
+            Swal.fire({
+                title: 'Horario Cerrado 🔒',
+                html: 'El restaurante atiende únicamente de:<br><b>10:00 AM a 07:00 PM</b>',
+                icon: 'warning',
+                confirmButtonColor: '#FF6600',
+                confirmButtonText: 'Entendido'
+            });
+            this.value = ''; // Limpiamos el input
+        }
+    });
+
+
+
+    document.getElementById('formReserva').addEventListener('submit', function(e) {
+        const telefono = inputTelef.value;
+        
+        // Validación: Debe tener 10 dígitos y empezar con 09
+        if (telefono.length !== 10 || !telefono.startsWith("09")) {
+            e.preventDefault(); // Detener el envío del formulario
+            
+            Swal.fire({
+                title: 'Teléfono Inválido 📱',
+                html: 'El número debe tener <b>10 dígitos</b> y empezar con <b>09</b>.<br>Ejemplo: 0991234567',
+                icon: 'warning',
+                confirmButtonColor: '#FF6600',
+                confirmButtonText: 'Corregir'
+            });
+            
+            inputTelef.value = ''; // Limpiar campo incorrecto
+        }
+    });
+
+    // --- INICIALIZAR MAPA (Leaflet) ---
+    // Coordenadas exactas de la Av. Portugal y Rep. del Salvador
+    var coord = [-0.1817303, -78.4803087];
+    var map = L.map('map', { zoomControl: false, attributionControl: false }).setView(coord, 16);
+
+    // Capa del mapa (OpenStreetMap bonito)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        maxZoom: 20
+    }).addTo(map);
+
+    // Marcador personalizado
+    var iconoPersonalizado = L.icon({
+        iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png', // Un icono de pin naranja/rojo
+        iconSize: [38, 38],
+        iconAnchor: [19, 38],
+        popupAnchor: [0, -38]
+    });
+
+    L.marker(coord, { icon: iconoPersonalizado }).addTo(map);
+
+
+    // --- SISTEMA DE NOTIFICACIONES (SweetAlert) ---
+    document.addEventListener("DOMContentLoaded", function() {
+        var ultimoEstado = "@estadoUltima";
+        var ultimoId = "@idUltima";
+        var claveAviso = "aviso_reserva_v3_" + ultimoId + "_" + ultimoEstado; // Clave única versión 3
+        var yaVisto = localStorage.getItem(claveAviso);
+
+        if (!yaVisto && ultimoId !== "0") {
+            if (ultimoEstado === "Confirmada") {
+                Swal.fire({
+                    title: '¡Mesa Confirmada! 🥳',
+                    html: 'Tu reserva ha sido aceptada por el restaurante.<br><b>¡Te esperamos!</b>',
+                    icon: 'success',
+                    confirmButtonColor: '#FF6600',
+                    confirmButtonText: '¡Excelente!',
+                    allowOutsideClick: false,
+                    padding: '2rem',
+                    customClass: { popup: 'rounded-4' }
+                }).then((r) => { if (r.isConfirmed) localStorage.setItem(claveAviso, "true"); });
+            }
+            else if (ultimoEstado.includes("Cancelada")) {
+                Swal.fire({
+                    title: 'Reserva Cancelada 😟',
+                    text: 'Lo sentimos, tu reserva no pudo ser procesada en esta ocasión.',
+                    icon: 'error',
+                    confirmButtonColor: '#333',
+                    confirmButtonText: 'Entendido',
+                    allowOutsideClick: false,
+                    padding: '2rem',
+                    customClass: { popup: 'rounded-4' }
+                }).then((r) => { if (r.isConfirmed) localStorage.setItem(claveAviso, "true"); });
+            }
+        }
+    });
+</script>

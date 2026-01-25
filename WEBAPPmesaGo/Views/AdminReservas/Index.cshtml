@@ -1,0 +1,181 @@
+﻿@model IEnumerable<WEBAPPmesaGo.Models.Reserva>
+
+@{
+    ViewData["Title"] = "Panel de Reservas";
+    string estado = ViewData["EstadoActual"] as string;
+}
+
+<style>
+    .admin-header {
+        background-color: white;
+        padding: 20px;
+        border-bottom: 1px solid #ddd;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .admin-pill {
+        border: 1px solid #ccc;
+        border-radius: 20px;
+        padding: 5px 15px;
+        color: #666;
+        font-weight: bold;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        text-decoration: none;
+        margin-left: 5px;
+        transition: all 0.2s;
+    }
+
+        .admin-pill:hover {
+            background-color: #f9f9f9;
+            color: #333;
+        }
+
+        .admin-pill.active {
+            background-color: #1a1a1a;
+            color: white;
+            border-color: #1a1a1a;
+        }
+
+    .status-badge {
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 0.8rem;
+        font-weight: bold;
+        display: inline-block;
+    }
+
+    .bg-pendiente {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+
+    .bg-confirmada {
+        background-color: #d4edda;
+        color: #155724;
+    }
+
+    .bg-cancelada {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+</style>
+
+<div class="container-fluid bg-light min-vh-100 p-0">
+
+    <div class="admin-header shadow-sm d-flex flex-column align-items-stretch">
+        
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h2 class="fw-bold mb-0 text-dark" style="font-family: 'Arial Black';">ADMINISTRACIÓN</h2>
+                <p class="text-muted mb-0">Gestión de Reservas - Admin</p>
+            </div>
+            
+             <form asp-action="BorrarTodoHistorial" method="post" class="d-inline border-start ps-4">
+                <button type="submit" class="btn btn-danger btn-sm rounded-pill fw-bold px-3"
+                        onclick="return confirm('⚠️ ¡ALERTA! ⚠️\n\n¿Seguro que quieres borrar TODO el historial?\nSe eliminarán todas las reservas de la base de datos y no se pueden recuperar.');">
+                    <i class="fa-solid fa-trash-can"></i> RESETEAR SISTEMA
+                </button>
+            </form>
+        </div>
+
+        <!-- NAVEGACIÓN UNIFICADA -->
+        <partial name="_AdminNav" />
+    </div>
+
+    <div class="container mt-4">
+        @if (!Model.Any())
+        {
+            <div class="alert alert-info text-center p-5 rounded-4 border-0 shadow-sm bg-white">
+                <i class="fa-regular fa-folder-open fa-3x mb-3 text-secondary"></i>
+                <h4 class="fw-bold">No hay reservas en esta categoría</h4>
+                <p class="text-muted">Todo está tranquilo por aquí.</p>
+            </div>
+        }
+        else
+        {
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-body p-0">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="p-3">#</th>
+                                <th>Cliente</th>
+                                <th>Fecha y Hora</th>
+                                <th>Personas</th>
+                                <th>Estado / Cupón</th>
+                                <th class="text-end p-3">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td class="p-3 fw-bold text-muted">@item.Id</td>
+                                    <td>
+                                        <div class="fw-bold text-dark">@item.NombreCliente</div>
+                                        <div class="small text-muted"><i class="fa-solid fa-phone me-1"></i> @item.Telefono</div>
+                                        <div class="small text-muted"><i class="fa-solid fa-envelope me-1"></i> @item.Correo</div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold">@item.FechaHora.ToString("dd/MM/yyyy")</div>
+                                        <div class="small text-muted">@item.FechaHora.ToString("HH:mm")</div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border">@item.NumeroPersonas pers.</span>
+                                    </td>
+                                    <td>
+                                        @if (item.Estado == "Pendiente")
+                                        {
+                                            <span class="status-badge bg-pendiente">PENDIENTE</span>
+                                        }
+                                        else if (item.Estado == "Confirmada")
+                                        {
+                                            <span class="status-badge bg-confirmada">CONFIRMADA</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="status-badge bg-cancelada">@item.Estado.ToUpper()</span>
+                                        }
+
+                                        @if (!string.IsNullOrEmpty(item.CuponUsado))
+                                        {
+                                            <div class="mt-2">
+                                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary px-2 py-1">
+                                                    <i class="fa-solid fa-ticket me-1"></i> @item.CuponUsado
+                                                </span>
+                                            </div>
+                                        }
+                                    </td>
+                                    <td class="text-end p-3">
+                                        @if (item.Estado == "Pendiente")
+                                        {
+                                            <form asp-action="Aprobar" asp-route-id="@item.Id" class="d-inline">
+                                                <button class="btn btn-success btn-sm rounded-pill px-3 shadow-sm" title="Aprobar">
+                                                    <i class="fa-solid fa-check"></i>
+                                                </button>
+                                            </form>
+                                            <form asp-action="Cancelar" asp-route-id="@item.Id" class="d-inline ms-1">
+                                                <button class="btn btn-danger btn-sm rounded-pill px-3 shadow-sm" title="Rechazar">
+                                                    <i class="fa-solid fa-xmark"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted small fst-italic">Procesada</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    </div>
+</div>

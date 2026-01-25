@@ -1,0 +1,425 @@
+﻿@model IEnumerable<WEBAPPmesaGo.Models.Plato>
+@{
+    ViewData["Title"] = "Gestión de Menú";
+}
+
+<style>
+    .panel-card {
+        background: white;
+        border-radius: 10px;
+        padding: 25px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        margin-bottom: 20px;
+    }
+
+    .btn-ai {
+        background: linear-gradient(135deg, #a855f7, #6366f1);
+        color: white;
+        border: none;
+    }
+
+    .btn-save {
+        background: #3b82f6;
+        color: white;
+        border: none;
+    }
+</style>
+
+<div class="container-fluid bg-light min-vh-100 p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-dark">Panel Administrativo</h2>
+    </div>
+
+    <!-- NAVEGACIÓN UNIFICADA -->
+    <partial name="_AdminNav" />
+
+    <div class="panel-card">
+        <h5 class="fw-bold mb-3">Nuevo Plato + IA 🤖</h5>
+        <form asp-action="GuardarPlato" method="post" id="formPlato">
+            <input type="hidden" name="Id" id="txtId" value="0" />
+            <input type="hidden" name="Preparacion" id="txtPreparacion" />
+            <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Nombre del Plato</label>
+                    <input name="Nombre" id="txtNombre" class="form-control" placeholder="Ej. Lomo Saltado" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Categoría</label>
+                    <select name="Categoria" id="txtCategoria" class="form-select">
+                        <option value="Platos Fuertes">Platos Fuertes</option>
+                        <option value="Entradas">Entradas</option>
+                        <option value="Bebidas">Bebidas</option>
+                        <option value="Postres">Postres</option>
+                        <option value="Desayunos">Desayunos</option>
+                        <option value="Platos Rápidos">Platos Rápidos</option>
+                        <option value="Sopas">Sopas</option>
+                        <option value="Combos">Combos</option>
+                        <option value="Extras">Extras</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Precio ($)</label>
+                    <input name="Precio" type="number" step="0.01" class="form-control" placeholder="0.00" required>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label small text-muted">Ingredientes (clave para la IA)</label>
+                <input id="txtIngredientes" name="IngredientesTexto" class="form-control" placeholder="Ej. Lomo fino, papas fritas, tomate, cebolla, salsa de soya">
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label small text-muted text-primary fw-bold">Descripción (Automática o Manual)</label>
+                <textarea name="Descripcion" id="txtDescripcion" class="form-control text-primary fst-italic" rows="2" placeholder="Escribe los ingredientes arriba y presiona 'Generar con IA' o escribe tú mismo..."></textarea>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center">
+                
+                <div class="d-flex gap-2">
+                    <button type="button" id="btnGenerar" class="btn btn-ai px-4 fw-bold">
+                        <i class="fa-solid fa-wand-magic-sparkles me-2"></i> Generar con IA
+                    </button>
+                    <button type="submit" id="btnGuardar" class="btn btn-save px-4 fw-bold">
+                        <i class="fa-solid fa-floppy-disk me-2"></i> Guardar Plato
+                    </button>
+                </div>
+
+                <button type="button" id="btnCancelar" class="btn btn-outline-secondary d-none" onclick="limpiarFormulario()">
+                    Cancelar Edición
+                </button>
+            </div>
+        </form>
+    </div>
+
+
+
+    <div class="panel-card">
+        <h5 class="fw-bold mb-3 text-muted small text-uppercase">Inventario Actual (Por Categoría)</h5>
+        
+        <div class="accordion" id="accordionMenu">
+            @{
+                var groupedPlatos = Model.GroupBy(p => p.Categoria).OrderBy(g => g.Key);
+                int index = 0;
+            }
+            
+            @foreach (var group in groupedPlatos)
+            {
+                var collapseId = "collapse" + index;
+                var headingId = "heading" + index;
+                
+                <div class="accordion-item border-0 mb-2 shadow-sm rounded-3 overflow-hidden">
+                    <h2 class="accordion-header" id="@headingId">
+                        <button class="accordion-button collapsed fw-bold text-dark bg-white" type="button" data-bs-toggle="collapse" data-bs-target="#@collapseId" aria-expanded="false" aria-controls="@collapseId">
+                            <span class="badge bg-primary me-2 rounded-pill">@group.Count()</span> @group.Key
+                        </button>
+                    </h2>
+                    <div id="@collapseId" class="accordion-collapse collapse" aria-labelledby="@headingId" data-bs-parent="#accordionMenu">
+                        <div class="accordion-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="bg-light text-muted small text-uppercase">
+                                        <tr>
+                                            <th style="width: 100px;">FOTO</th>
+                                            <th>DETALLE DEL PLATO</th>
+                                            <th class="text-center">PRECIO</th>
+                                            <th class="text-center">ESTADO</th>
+                                            <th class="text-end">ACCIÓN</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in group)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    @if (!string.IsNullOrEmpty(item.ImagenUrl) && item.ImagenUrl.StartsWith("http"))
+                                                    {
+                                                        <img src="@item.ImagenUrl" class="rounded-3 shadow-sm" style="width: 70px; height: 70px; object-fit: cover;" onerror="this.src='/img/plato_default.png'">
+                                                    }
+                                                    else
+                                                    {
+                                                        <img src="~/img/@item.ImagenUrl" class="rounded-3 shadow-sm" style="width: 70px; height: 70px; object-fit: cover;" onerror="this.src='/img/plato_default.png'">
+                                                    }
+                                                </td>
+
+                                                <td>
+                                                    <div class="fw-bold text-dark fs-5">@item.Nombre</div>
+                                                    <small class="text-muted text-truncate d-block" style="max-width: 400px;">@item.Descripcion</small>
+                                                    
+                                                    <!-- RECEIPE & STOCK DISPLAY -->
+                                                    @if (item.Ingredientes != null && item.Ingredientes.Any())
+                                                    {
+                                                        <div class="mt-2 border-top pt-2">
+                                                            <div class="d-flex flex-wrap gap-1">
+                                                                @foreach (var pi in item.Ingredientes)
+                                                                {
+                                                                    if (pi.Ingrediente != null)
+                                                                    {
+                                                                        var isLow = pi.Ingrediente.Cantidad < pi.CantidadRequerida;
+                                                                        <span class="badge bg-light text-secondary border fw-normal" title="Requiere: @pi.CantidadRequerida">
+                                                                            @pi.Ingrediente.Nombre:
+                                                                            <strong class="stock-val-@pi.Ingrediente.Id @(isLow ? "text-danger" : "text-success")">
+                                                                                @pi.Ingrediente.Cantidad.ToString("0.##")
+                                                                            </strong>
+                                                                        </span>
+                                                                    }
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                </td>
+
+                                                <td class="text-center fw-bold fs-5 text-dark">
+                                                    $@item.Precio.ToString("0.00")
+                                                </td>
+
+                                                <td class="text-center">
+                                                    @if (item.Disponible)
+                                                    {
+                                                        <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill fw-bold">
+                                                            <i class="fa-solid fa-check me-1"></i> Disponible
+                                                        </span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 rounded-pill fw-bold">
+                                                            <i class="fa-solid fa-xmark me-1"></i> Agotado
+                                                        </span>
+                                                    }
+                                                </td>
+
+                                                <td class="text-end">
+                                                    <div class="btn-group">
+                                                        @{
+                                                            // Preparamos los textos seguro para JS
+                                                            var jsNombre = Html.Raw(item.Nombre.Replace("'", "\\'"));
+                                                            var jsCat = Html.Raw(item.Categoria);
+                                                            var jsDesc = Html.Raw((item.Descripcion ?? "").Replace("'", "\\'").Replace("\n", " "));
+                                                            var jsPrep = Html.Raw((item.Preparacion ?? "").Replace("'", "\\'").Replace("\n", "\\n").Replace("\r", ""));
+                                                        }
+                                                        <button class="btn btn-outline-secondary btn-sm" title="Editar"
+                                                                onclick="editarPlato(@item.Id, '@jsNombre', @item.Precio.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture), '@jsCat', '@jsDesc', '@jsPrep')">
+                                                            <i class="fa-solid fa-pen"></i>
+                                                        </button>
+
+                                                        <!-- BOTÓN DE VENTA/COCINA (AJAX) -->
+                                                        <button class="btn btn-outline-success btn-sm" title="Registrar Venta (Descontar Stock)" 
+                                                                onclick="registrarVenta(@item.Id, '@jsNombre')">
+                                                            <i class="fa-solid fa-cash-register"></i>
+                                                        </button>
+                                                        
+                                                        <form asp-action="ToggleStock" asp-route-id="@item.Id" method="post" class="d-inline">
+                                                            <button class="btn btn-outline-primary btn-sm" title="Cambiar Disponibilidad">
+                                                                <i class="fa-solid fa-rotate"></i>
+                                                            </button>
+                                                        </form>
+
+                                                        <form asp-action="EliminarPlato" asp-route-id="@item.Id" method="post" class="d-inline" onsubmit="return confirm('¿Seguro que quieres eliminar este plato?');">
+                                                            <button class="btn btn-outline-danger btn-sm" title="Eliminar">
+                                                                <i class="fa-solid fa-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                        <a asp-controller="AdminInventario" asp-action="GestionarReceta" asp-route-id="@item.Id" class="btn btn-outline-info btn-sm" title="Receta">
+                                                            <i class="fa-solid fa-scroll"></i>
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                index++;
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        console.log("AdminMenu Script Cargado Correctamente");
+
+        // Asignar evento al botón de Generar IA
+        var btnGenerar = document.getElementById('btnGenerar');
+        if (btnGenerar) {
+            btnGenerar.addEventListener('click', generarConIA);
+        } else {
+            console.error("No se encontró el botón btnGenerar");
+        }
+    });
+
+    async function generarConIA() {
+        
+        var nombre = document.getElementById('txtNombre').value;
+        var ingredientes = document.getElementById('txtIngredientes').value;
+        var txtArea = document.getElementById('txtDescripcion');
+        var btnGenerar = document.getElementById('btnGenerar');
+        var originalText = btnGenerar.innerHTML;
+
+        if (!nombre) { 
+            alert("¡Hey! Ponle nombre al plato primero."); 
+            return; 
+        }
+
+        txtArea.value = "Generando descripción...";
+        btnGenerar.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generando...';
+        btnGenerar.disabled = true;
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); 
+
+        try {
+            // Llamada AJAX al controlador
+            const response = await fetch('/AdminMenu/GenerarDescripcion', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `nombre=${encodeURIComponent(nombre)}&ingredientes=${encodeURIComponent(ingredientes)}`,
+                signal: controller.signal
+            });
+
+            const data = await response.json();
+            clearTimeout(timeoutId);
+            
+            // Restaurar botón
+            btnGenerar.innerHTML = originalText;
+            btnGenerar.disabled = false;
+
+            if (data.success) {
+                document.getElementById('txtDescripcion').value = data.description;
+            } else {
+                alert("Error servidor: " + (data.error || "Desconocido"));
+                usarPlanB(nombre);
+            }
+        } catch (error) {
+            clearTimeout(timeoutId);
+            console.error('Error:', error);
+            
+            alert("Error: " + error.message);
+            usarPlanB(nombre);
+            
+            btnGenerar.innerHTML = originalText;
+            btnGenerar.disabled = false;
+        }
+    }
+
+    function usarPlanB(nombre) {
+        document.getElementById('txtDescripcion').value = `¡Prueba nuestro delicioso ${nombre}! Una experiencia de sabor única.`;
+    }
+
+    // --- LOGICA DE VENTA CON AJAX ---
+    async function registrarVenta(id, nombre) {
+        if (!confirm(`¿Registrar venta de ${nombre}? Se descontarán los ingredientes.`)) return;
+
+        try {
+            const response = await fetch('/AdminMenu/VenderPlato', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `id=${id}`
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                mostrarToast(data.message, 'success');
+                if (data.updates) {
+                    data.updates.forEach(u => {
+                        document.querySelectorAll('.stock-val-' + u.ingredienteId).forEach(el => {
+                            el.innerText = parseFloat(u.nuevaCantidad).toFixed(2);
+                            el.classList.add('text-primary');
+                            setTimeout(() => el.classList.remove('text-primary'), 1000);
+                        });
+                    });
+                }
+            } else {
+                mostrarToast(data.message, 'danger');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            mostrarToast("Error de conexión al registrar la venta.", 'danger');
+        }
+    }
+
+    function mostrarToast(mensaje, tipo) {
+        let container = document.getElementById('toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toast-container';
+            container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+            container.style.zIndex = '1100';
+            document.body.appendChild(container);
+        }
+
+        const toastHtml = `
+            <div class="toast align-items-center text-white bg-${tipo} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body fs-6 fw-bold">
+                        <i class="fa-solid ${tipo === 'success' ? 'fa-check-circle' : 'fa-circle-exclamation'} me-2"></i>
+                        ${mensaje}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        `;
+
+        const toastElement = document.createElement('div');
+        toastElement.innerHTML = toastHtml;
+        container.appendChild(toastElement.firstElementChild);
+
+        const toastEl = container.lastElementChild;
+        const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+        toast.show();
+
+        toastEl.addEventListener('hidden.bs.toast', () => {
+            toastEl.remove();
+        });
+    }
+
+    // FORMULARIO: Edición y Reset
+    function editarPlato(id, nombre, precio, categoria, descripcion, preparacion) {
+        document.getElementById('txtId').value = id;
+        document.getElementById('txtNombre').value = nombre;
+        document.getElementById('txtCategoria').value = categoria;
+        document.getElementById('txtDescripcion').value = descripcion;
+        document.getElementById('txtPreparacion').value = preparacion;
+        document.querySelector('input[name="Precio"]').value = precio;
+
+        document.getElementById('btnGuardar').innerHTML = '<i class="fa-solid fa-pen-to-square me-2"></i> Actualizar Plato';
+        document.getElementById('btnGuardar').classList.remove('btn-save');
+        document.getElementById('btnGuardar').classList.add('btn-warning');
+        
+        document.getElementById('btnCancelar').classList.remove('d-none');
+        document.getElementById('formPlato').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function limpiarFormulario() {
+        document.getElementById('txtId').value = "0";
+        document.getElementById('formPlato').reset();
+        document.getElementById('txtPreparacion').value = ""; 
+        
+        document.getElementById('btnGuardar').innerHTML = '<i class="fa-solid fa-floppy-disk me-2"></i> Guardar Plato';
+        document.getElementById('btnGuardar').classList.add('btn-save');
+        document.getElementById('btnGuardar').classList.remove('btn-warning');
+        
+        document.getElementById('btnCancelar').classList.add('d-none');
+    }
+
+    // Interceptamos submit para copiar ingredientes a preparación si está vacío
+    document.getElementById('formPlato').addEventListener('submit', function(event) {
+        var ing = document.getElementById('txtIngredientes').value;
+        var prep = document.getElementById('txtPreparacion');
+        
+        if ((!prep.value || prep.value.trim() === '') && ing) {
+            var listaFormateada = ing.split(',').map(function(item) {
+                return '- ' + item.trim();
+            }).join('\n');
+            prep.value = "Ingredientes:\n" + listaFormateada;
+        }
+    });
+
+</script>

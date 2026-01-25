@@ -1,0 +1,190 @@
+﻿@{
+    ViewData["Title"] = "Inicio";
+}
+
+<div class="container-fluid p-0">
+    <div class="hero-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-8">
+                    <h1 class="hero-title">SABOR<br>ECUATORIANO</h1>
+                    <p class="hero-subtitle">
+                        La verdadera sazón de la hueca. Encebollados, fritadas y los mejores secos del país directo a tu mesa.
+                    </p>
+                    <div class="d-flex gap-3">
+                        <a asp-controller="Portal" asp-action="Menu" class="btn btn-light btn-lg rounded-pill fw-bold text-primary">VER MENÚ</a>
+                        <a asp-controller="Cupones" asp-action="Index" class="btn btn-outline-light btn-lg rounded-pill">CUPONES</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mt-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="section-title m-0">PROMOCIONES DE LOCURA</h2>
+        <a href="#" class="text-primary fw-bold text-decoration-none">Ver todo ></a>
+    </div>
+
+    <div class="row align-items-stretch">
+
+        <div class="col-md-4 mb-4">
+            <div class="card card-product h-100">
+                <div class="position-relative">
+                    <img src="~/img/yapa.png" class="card-img-top card-img-fixed-height" alt="Yapa">
+                    <span class="price-tag">$13.50</span>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title fw-bold">Yapa de la casa</h5>
+                    <p class="card-text small text-muted mb-4">1 plato fuerte a elección + 1 extra (maduro / papas / arroz) + Yapa sorpresa.</p>
+                    <a asp-controller="Portal" asp-action="Reservar" class="btn btn-primary w-100 mt-auto">ORDENAR AHORA</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card card-product h-100">
+                <div class="position-relative">
+                    <img src="~/img/nohayplata.png" class="card-img-top card-img-fixed-height" alt="No hay plata">
+                    <span class="price-tag">$4.99</span>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title fw-bold">No hay plata pero hay hambre</h5>
+                    <p class="card-text small text-muted mb-4">Arroz con huevo + papas fritas + colita roja (precio económico).</p>
+                    <a asp-controller="Portal" asp-action="Reservar" class="btn btn-primary w-100 mt-auto">ORDENAR AHORA</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card card-product h-100">
+                <div class="position-relative">
+                    <img src="~/img/nanito.png" class="card-img-top card-img-fixed-height" alt="Ñañito">
+                    <span class="price-tag">$9.99</span>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title fw-bold">Ñañito surtido</h5>
+                    <p class="card-text small text-muted mb-4">1 entrada + 1 plato rápido + bebida (combo variado y llenador).</p>
+                    <a asp-controller="Portal" asp-action="Reservar" class="btn btn-primary w-100 mt-auto">ORDENAR AHORA</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card card-product h-100">
+                <div class="position-relative">
+                    <img src="~/img/dieta.png" class="card-img-top card-img-fixed-height" alt="Llapingachos">
+                    <span class="price-tag">$12.50</span>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title fw-bold">Ni la dieta me detiene</h5>
+                    <p class="card-text small text-muted mb-4">Llapingachos + fritadita + huevo + café o jugo (combo bien completo).</p>
+                    <a asp-controller="Portal" asp-action="Reservar" class="btn btn-primary w-100 mt-auto">ORDENAR AHORA</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card card-product h-100">
+                <div class="position-relative">
+                    <img src="~/img/finalin.png" class="card-img-top card-img-fixed-height" alt="Encebollado">
+                    <span class="price-tag">$7.50</span>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title fw-bold">Mejor que un finalín</h5>
+                    <p class="card-text small text-muted mb-4">Encebollado + empanada de viento + café (perfecto para trasnochados).</p>
+                    <a asp-controller="Portal" asp-action="Reservar" class="btn btn-primary w-100 mt-auto">ORDENAR AHORA</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card card-product h-100">
+                <div class="position-relative">
+                    <img src="~/img/killer.png" class="card-img-top card-img-fixed-height" alt="Mega Plato">
+                    <span class="price-tag">$14.00</span>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title fw-bold">Llapingacho killer</h5>
+                    <p class="card-text small text-muted mb-4">Mega plato de 6 llapingachos + chorizo + huevo + curtido.</p>
+                    <a asp-controller="Portal" asp-action="Reservar" class="btn btn-primary w-100 mt-auto">ORDENAR AHORA</a>
+                </div>
+            </div>
+        </div>
+
+    </div> ```
+
+    <div class="coupon-slider">
+        <div class="coupon-track">
+            @{
+                var cupones = ViewData["Cupones"] as IEnumerable<WEBAPPmesaGo.Models.Cupon>;
+                // Duplicamos la lista para asegurar el loop infinito si hay pocos elementos
+                var displayList = new List<WEBAPPmesaGo.Models.Cupon>();
+                if (cupones != null && cupones.Any())
+                {
+                    displayList.AddRange(cupones);
+                    displayList.AddRange(cupones); // Duplicar para efecto marquee
+                    if (cupones.Count() < 4) displayList.AddRange(cupones); // Triplicar si son muy pocos
+                }
+            }
+
+            @if (displayList.Any())
+            {
+                foreach (var cupon in displayList)
+                {
+                    // Lógica de estilos: Si es feriado, mantiene estilo naranja.
+                    // Si es normal, usa el estilo blanco de la imagen proporcionada.
+                    var isHoliday = cupon.EsFeriado;
+                    var cardClass = isHoliday ? "coupon-card holiday-coupon" : "coupon-card";
+                    var btnClass = isHoliday ? "btn btn-outline-light w-100 fw-bold" : "btn btn-outline-primary w-100 fw-bold";
+                    
+                    <div class="col-10 col-md-5 col-lg-4 flex-shrink-0" style="width: 350px;">
+                        <div class="@cardClass h-100 d-flex flex-column justify-content-between position-relative" style="overflow: visible;">
+                            
+                            <div class="coupon-badge-percent">@cupon.Porcentaje%</div>
+
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="fw-bold text-uppercase m-0" style="font-size: 0.9rem; line-height: 1.2;">@cupon.Codigo</h6>
+                                <i class="fa-solid fa-ticket text-muted opacity-50"></i>
+                            </div>
+
+                            <div class="mb-3">
+                                <p class="small mb-1">@cupon.Descripcion</p>
+                                @if(isHoliday) {
+                                    <small class="text-white-50 fw-bold" style="font-size: 0.7rem;">VÁLIDO HASTA @cupon.FechaExpiracion.ToString("dd/MM")</small>
+                                } else {
+                                     <small class="text-muted fw-bold" style="font-size: 0.7rem;">VÁLIDO EN LOCAL</small>
+                                }
+                            </div>
+
+                            <a asp-controller="Portal" asp-action="Reservar" asp-route-cupon="@cupon.Codigo" class="@btnClass">CANJEAR</a>
+                        </div>
+                    </div>
+                }
+            }
+            else 
+            {
+                 <!-- Placeholder por si no hay cupones -->
+                <div class="col-10 col-md-5 col-lg-4 flex-shrink-0" style="width: 350px;">
+                    <div class="coupon-card h-100">
+                        <div class="coupon-badge">%</div>
+                        <h6 class="text-primary fw-bold">PRÓXIMAMENTE</h6>
+                        <p class="small">Estamos cocinando nuevas promociones para ti.</p>
+                        <small class="text-muted fw-bold">ATENTO A REDES</small>
+                    </div>
+                </div>
+                 <div class="col-10 col-md-5 col-lg-4 flex-shrink-0" style="width: 350px;">
+                    <div class="coupon-card h-100">
+                        <div class="coupon-badge">%</div>
+                        <h6 class="text-primary fw-bold">PRÓXIMAMENTE</h6>
+                        <p class="small">Estamos cocinando nuevas promociones para ti.</p>
+                        <small class="text-muted fw-bold">ATENTO A REDES</small>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+</div>

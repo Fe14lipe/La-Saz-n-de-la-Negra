@@ -1,0 +1,380 @@
+/* ==============================================
+   site.css - Estilos completos para mesaGO
+   ============================================== */
+
+:root {
+    /* AQUÍ DEFINIMOS EL COLOR TOMATE COMO PRINCIPAL */
+    --color-primary: #FF6600;
+    --color-dark: #1a1a1a;
+    --font-heading: 'Arial Black', sans-serif;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+}
+
+/* ==============================================
+   OVERRIDES DE BOOTSTRAP (Forzar color Tomate)
+   ============================================== */
+
+/* Esto cambia el texto "mesaGO" y "Ver Menú" a naranja */
+.text-primary {
+    color: var(--color-primary) !important;
+}
+
+/* Esto cambia el fondo del botón "ORDENAR" y precios */
+.btn-primary {
+    background-color: var(--color-primary) !important;
+    border-color: var(--color-primary) !important;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+    .btn-primary:hover {
+        background-color: #e65c00 !important; /* Un poco más oscuro al pasar el mouse */
+        border-color: #e65c00 !important;
+    }
+
+/* Botones de borde blanco (como Cupones en el banner) */
+.btn-outline-light {
+    border-width: 2px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+/* Enlaces generales */
+a {
+    text-decoration: none;
+}
+
+/* ==============================================
+   HERO SECTION (Banner Principal)
+   ============================================== */
+.hero-section {
+    /* Fondo con imagen y capa naranja transparente encima */
+    background: linear-gradient(rgba(255, 102, 0, 0.85), rgba(200, 80, 0, 0.9)), url('https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=1000&auto=format&fit=crop');
+    background-size: cover;
+    background-position: center;
+    color: white;
+    padding: 100px 0;
+    text-align: left;
+    min-height: 520px; /* Altura del banner */
+    display: flex;
+    align-items: center;
+}
+
+.hero-title {
+    font-family: var(--font-heading);
+    font-size: 4rem;
+    font-style: italic;
+    line-height: 1;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.hero-subtitle {
+    font-size: 1.3rem;
+    margin-bottom: 35px;
+    max-width: 600px;
+    font-weight: 300;
+}
+
+/* ==============================================
+   TARJETAS Y PRODUCTOS
+   ============================================== */
+.section-title {
+    border-left: 5px solid var(--color-primary);
+    padding-left: 15px;
+    font-weight: 800; /* Más negrita */
+    text-transform: uppercase;
+    color: var(--color-dark);
+    font-size: 1.5rem;
+}
+
+.card-product {
+    border: none;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08); /* Sombra suave */
+    transition: transform 0.3s;
+    margin-bottom: 20px;
+    overflow: hidden; /* Para que la imagen no se salga al redondear */
+    border-radius: 10px;
+}
+
+    .card-product:hover {
+        transform: translateY(-5px); /* Efecto de levitar al pasar mouse */
+    }
+
+/* Etiqueta de precio sobre la imagen */
+.price-tag {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background-color: var(--color-primary);
+    color: white;
+    padding: 5px 12px;
+    font-weight: bold;
+    border-radius: 5px;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+}
+
+.card-title {
+    color: var(--color-dark);
+}
+
+/* ==============================================
+   CUPONES
+   ============================================== */
+.coupon-card {
+    border: 2px dashed #ccc; /* Borde punteado */
+    padding: 25px;
+    border-radius: 12px;
+    background-color: #fff;
+    position: relative;
+    margin-bottom: 20px;
+    transition: 0.3s;
+}
+
+    .coupon-card:hover {
+        border-color: var(--color-primary);
+        background-color: #fffbf5; /* Fondo muy clarito naranja al pasar mouse */
+    }
+
+.coupon-badge {
+    position: absolute;
+    top: -15px;
+    right: -10px;
+    background-color: var(--color-primary);
+    color: white;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* ==============================================
+   FOOTER (Pie de página)
+   ============================================== */
+.footer {
+    font-size: 0.9rem;
+    background-color: #111 !important; /* Negro casi total */
+}
+
+/* ==============================================
+   NUEVO DISEÑO DE MENÚ (Filtros y Tabs)
+   ============================================== */
+
+/* Barra de navegación superior (Tabs) */
+.menu-tabs {
+    border-bottom: 2px solid #eee;
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+}
+
+.menu-tab-item {
+    text-decoration: none;
+    color: #999;
+    font-weight: 800;
+    text-transform: uppercase;
+    padding-bottom: 15px;
+    border-bottom: 4px solid transparent;
+    transition: all 0.3s;
+}
+
+    .menu-tab-item:hover {
+        color: var(--color-primary);
+    }
+
+    /* La pestaña activa tiene borde naranja */
+    .menu-tab-item.active {
+        color: var(--color-primary);
+        border-bottom-color: var(--color-primary);
+    }
+
+/* Título principal */
+.menu-main-title {
+    font-family: var(--font-heading);
+    text-transform: uppercase;
+    font-weight: 900;
+    letter-spacing: 1px;
+    color: var(--color-dark);
+}
+
+/* Contenedor de los botones de filtro */
+.filter-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 40px;
+}
+
+/* Botones tipo píldora */
+.filter-btn {
+    background-color: #f0f2f5; /* Gris claro */
+    color: #666;
+    border: none;
+    border-radius: 50px; /* Forma de píldora */
+    padding: 10px 25px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+    .filter-btn:hover {
+        background-color: #e4e6e9;
+        color: #333;
+    }
+
+    /* Botón activo (negro) */
+    .filter-btn.active {
+        background-color: #000;
+        color: white;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+/* ==============================================
+   AUTO-SCROLL / MARQUEE (CUPONES)
+   ============================================== */
+.coupon-slider {
+    overflow: hidden;
+    width: 100%;
+    /* Padding para que no se corten los badges/sombras */
+    padding-top: 20px;
+    padding-bottom: 20px;
+    padding-right: 20px; 
+    /* Mask para desvanecer bordes */
+    -webkit-mask: linear-gradient(90deg, transparent, white 2%, white 98%, transparent);
+    mask: linear-gradient(90deg, transparent, white 2%, white 98%, transparent);
+}
+
+.coupon-track {
+    display: flex;
+    gap: 20px; /* MENOS ESPACIO para que se vea mas continuo */
+    width: max-content;
+    animation: scroll 30s linear infinite;
+}
+
+.coupon-track:hover {
+    animation-play-state: paused;
+}
+
+@keyframes scroll {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+
+/* ==============================================
+   NUEVOS ESTILOS CUPON (OVERRIDE)
+   ============================================== */
+.coupon-card {
+    border: 1px solid #e0e0e0 !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    border-radius: 8px;
+    background-color: #fff;
+    transition: transform 0.2s;
+}
+.coupon-card:hover { 
+    transform: translateY(-3px); 
+}
+
+/* Ocultar badge antiguo */
+.coupon-badge { display: none !important; }
+
+/* Estilo Feriado */
+.coupon-card.holiday-coupon {
+    background-color: var(--color-primary) !important;
+    border-color: var(--color-primary) !important;
+    color: white !important;
+}
+.coupon-card.holiday-coupon h6, 
+.coupon-card.holiday-coupon p, 
+.coupon-card.holiday-coupon small,
+.coupon-card.holiday-coupon i {
+    color: white !important;
+}
+.coupon-card.holiday-coupon .btn {
+    border-color: white !important;
+    color: white !important;
+}
+.coupon-card.holiday-coupon .btn:hover {
+    background-color: white !important;
+    color: var(--color-primary) !important;
+}
+
+/* Boton Canjear (Azul base) */
+.btn-canjear-blue {
+    color: #2563eb; /* Azul */
+    border-color: #2563eb;
+    background: transparent;
+}
+.btn-canjear-blue:hover {
+    background-color: #2563eb;
+    color: white;
+}
+
+
+/* Correccion Badge Porcentaje */
+.coupon-card {
+    position: relative !important;
+    overflow: visible !important;
+}
+
+.coupon-badge-percent {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background-color: #28a745; /* Verde existo */
+    color: white;
+    font-weight: bold;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    z-index: 10;
+}
+
+.holiday-coupon .coupon-badge-percent {
+    background-color: white;
+    color: var(--color-primary);
+}
+
+
+/* Corrección: Estilos para Tarjetas de Cupones en Pagina Grid (Views/Cupones/Index) */
+.card.holiday-coupon {
+    background-color: var(--color-primary) !important;
+    color: white !important;
+}
+.card.holiday-coupon h6,
+.card.holiday-coupon p,
+.card.holiday-coupon i,
+.card.holiday-coupon small {
+    color: white !important;
+}
+.card.holiday-coupon .btn {
+    border-color: white !important;
+    color: white !important;
+}
+.card.holiday-coupon .btn:hover {
+    background-color: white !important;
+    color: var(--color-primary) !important;
+}
+

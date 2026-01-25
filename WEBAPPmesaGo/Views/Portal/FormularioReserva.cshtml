@@ -1,0 +1,88 @@
+﻿@model WEBAPPmesaGo.Models.Reserva
+@{
+    ViewData["Title"] = "Ingreso";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card border-0 shadow-lg rounded-4 p-4">
+                <div class="card-body">
+
+                    <div class="mb-4">
+                        <a asp-action="Reservar" class="text-muted text-decoration-none small">
+                            <i class="fa-solid fa-arrow-left"></i> Volver
+                        </a>
+                    </div>
+
+                    <h2 class="text-center fw-bold text-dark mb-2" style="font-family: 'Arial Black';">BIENVENIDO A LSN</h2>
+                    <p class="text-center text-muted mb-4">Ingresa tus datos para acceder al sistema.</p>
+
+                    <form asp-action="FormularioReserva" method="post" id="formLogin">
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">NOMBRE COMPLETO</label>
+                            <input name="NombreCliente"
+                                   class="form-control form-control-lg bg-light fs-6"
+                                   placeholder="Ej. Felipe Boada"
+                                   required
+                                   oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '')" />
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold text-muted">CORREO ELECTRÓNICO</label>
+                            <input name="Correo"
+                                   id="inputCorreo"
+                                   type="email"
+                                   class="form-control form-control-lg bg-light fs-6"
+                                   placeholder="felipe@gmail.com"
+                                   required
+                                   style="text-transform: lowercase;"
+                                   oninput="this.value = this.value.toLowerCase().replace(/[^a-z0-9@@._-]/g, '')" />
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg fw-bold text-white shadow-sm">CONTINUAR</button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.getElementById('formLogin').addEventListener('submit', function(e) {
+        const email = document.getElementById('inputCorreo').value.trim();
+        
+        if (!email) return;
+
+        // Extraer dominio
+        const partes = email.split('@@');
+        if (partes.length !== 2) return; // Email inválido base
+
+        const dominio = partes[1].toLowerCase();
+        
+        // Lista de dominios permitidos explícitos
+        const dominiosPermitidos = ['gmail.com', 'hotmail.com', 'outlook.com', 'yahoo.com', 'udla.edu.ec'];
+        
+        // Verificación: Está en la lista O termina en .edu / .edu.ec
+        const esValido = dominiosPermitidos.includes(dominio) || 
+                         dominio.endsWith('.edu.ec') || 
+                         dominio.endsWith('.edu');
+
+        if (!esValido) {
+            e.preventDefault(); // Detener envío
+            
+            Swal.fire({
+                title: 'Correo no permitido 📧',
+                html: 'Solo aceptamos correos personales (<b>Gmail, Hotmail, Outlook, Yahoo</b>) o institucionales (<b>.edu / .edu.ec</b>).',
+                icon: 'error',
+                confirmButtonColor: '#FF6600',
+                confirmButtonText: 'Entendido'
+            });
+        }
+    });
+</script>

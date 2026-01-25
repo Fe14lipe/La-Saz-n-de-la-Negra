@@ -1,0 +1,154 @@
+﻿@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - LSN</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+</head>
+<body class="d-flex flex-column min-vh-100">
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-0 py-3">
+            <div class="container">
+                <a id="logoSecreto" class="navbar-brand" href="/">
+                    <img src="~/img/logo_lszn.png" alt="La Sazón de la Negra" style="height: 50px; width: auto; object-fit: contain;">
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark fw-bold" asp-controller="Portal" asp-action="Menu">Menú</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark fw-bold" asp-controller="Portal" asp-action="Reservar">Reservas</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark fw-bold" asp-controller="Cupones" asp-action="Index">Cupones</a>
+                        </li>
+                        <li class="nav-item px-3">
+                            <span class="badge bg-light text-dark border p-2" style="cursor: pointer;" title="¡Próximamente en tiendas!" data-bs-toggle="modal" data-bs-target="#appDownloadModal">
+                                Descarga nuestra app 📱
+                            </span>
+                        </li>
+                        <li class="nav-item d-flex align-items-center ms-2">
+                            @{
+                                var nombreUser = HttpContextAccessor.HttpContext.Session.GetString("UserName");
+                            }
+
+                            @if (!string.IsNullOrEmpty(nombreUser))
+                            {
+                                <div class="text-end me-3 lh-1">
+                                    <small class="text-muted d-block" style="font-size: 0.7rem; font-weight: bold;">HOLA,</small>
+                                    <span class="text-dark fw-bold text-uppercase">@nombreUser</span>
+                                </div>
+                                <a class="btn btn-outline-primary rounded-pill px-4 fw-bold" asp-controller="Portal" asp-action="Salir">SALIR</a>
+                            }
+                            else
+                            {
+                                <a class="btn btn-primary rounded-pill px-4 text-white" asp-controller="Portal" asp-action="Reservar">ORDENAR / INGRESAR</a>
+                            }
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container-fluid p-0 flex-grow-1">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted bg-dark text-white py-4 mt-5">
+        <div class="container text-center">
+            &copy; 2025 - LaSazonDeLaNegra - Sabor Ecuatoriano
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+
+    <script>
+        // --- MODO DIOS MEJORADO ---
+        let clickCount = 0;
+        let clickTimer = null;
+
+        document.getElementById('logoSecreto').addEventListener('click', function (e) {
+            e.preventDefault(); // Pausamos un momento la navegación
+            clickCount++;
+
+            // Si había una cuenta regresiva para ir al inicio, la cancelamos porque diste otro clic
+            if (clickTimer) {
+                clearTimeout(clickTimer);
+            }
+
+            if (clickCount === 4) {
+                // ¡4 CLICS DETECTADOS! -> MODO ADMIN
+                console.log("Modo Dios Activado ⚡");
+                window.location.href = '/Portal/LoginAdmin';
+                clickCount = 0; // Reiniciamos
+            } else {
+                // Si no llegas a 4, esperamos un poquitín (350ms) para ver si das otro clic
+                clickTimer = setTimeout(() => {
+                    // Si pasaron 350ms y no diste más clics, asumimos que querías ir al inicio
+                    window.location.href = '/';
+                    clickCount = 0;
+                }, 350);
+            }
+        });
+    </script>
+
+    <!-- App Download Modal -->
+    <div class="modal fade" id="appDownloadModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-0 pb-0">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center p-5 pt-0">
+                    <h3 class="fw-bold mb-3" style="font-family: 'Arial Black', sans-serif;">¡Llévanos contigo! 📱</h3>
+                    <p class="text-muted mb-4 fs-5">
+                        Encuentranos en la tienda de 
+                        <span class="text-dark fw-bold">Play Store</span> o 
+                        <span class="text-dark fw-bold">Apple Store</span> como: <br>
+                        <strong class="text-primary fs-3 d-block mt-2">La Sazón de la Negra</strong>
+                        <span class="d-block small mt-1">El mejor sistema de restaurantes</span>
+                    </p>
+                    
+                    <div class="d-flex justify-content-center gap-3 flex-wrap">
+                        <!-- Apple Store Logo -->
+                        <a href="#" class="btn btn-dark rounded-pill px-4 py-2 d-flex align-items-center shadow-sm">
+                            <i class="fa-brands fa-apple fa-2x me-2"></i>
+                            <div class="text-start lh-1">
+                                <small class="d-block" style="font-size: 0.7rem;">Download on the</small>
+                                <span class="fw-bold">App Store</span>
+                            </div>
+                        </a>
+
+                        <!-- Play Store Logo -->
+                        <a href="#" class="btn btn-dark rounded-pill px-4 py-2 d-flex align-items-center shadow-sm">
+                            <i class="fa-brands fa-google-play fa-2x me-2"></i>
+                            <div class="text-start lh-1">
+                                <small class="d-block" style="font-size: 0.7rem;">GET IT ON</small>
+                                <span class="fw-bold">Google Play</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

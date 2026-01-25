@@ -1,0 +1,153 @@
+@model WEBAPPmesaGo.Models.Cliente
+
+@{
+    ViewData["Title"] = "Historial del Cliente";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var reservas = ViewBag.Reservas as List<WEBAPPmesaGo.Models.Reserva>;
+}
+
+<style>
+    .admin-header {
+        background-color: white;
+        padding: 20px;
+        border-bottom: 1px solid #ddd;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+</style>
+
+<div class="container-fluid bg-light min-vh-100 p-0">
+    
+    <!-- HEADER ADMINISTRACIÓN -->
+    <div class="admin-header shadow-sm">
+        <div>
+            <h2 class="fw-bold mb-0 text-dark" style="font-family: 'Arial Black';">ADMINISTRACIÓN</h2>
+            <p class="text-muted mb-0">Detalles del Cliente</p>
+        </div>
+        <div>
+            <a asp-action="Index" class="btn btn-outline-dark fw-bold btn-sm">
+                <i class="fa-solid fa-arrow-left me-1"></i> VOLVER A LISTA
+            </a>
+        </div>
+    </div>
+
+    <!-- NAVEGACIÓN (Opcional, si se quiere mantener consistente) -->
+     <div class="bg-white border-bottom px-3 py-2">
+        <span class="text-muted small">Estás viendo:</span> 
+        <span class="fw-bold text-dark">@Model.Nombre</span>
+    </div>
+
+    <div class="container mt-4">
+        <div class="row">
+            <!-- COLUMNA IZQUIERDA: DATOS DEL CLIENTE -->
+            <div class="col-md-4 mb-4">
+                <div class="card border-0 shadow-sm rounded-4 h-100">
+                    <div class="card-body text-center p-4">
+                        <div class="mb-3">
+                            <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center" style="width: 100px; height: 100px;">
+                                <i class="fa-solid fa-user fa-3x text-secondary"></i>
+                            </div>
+                        </div>
+                        <h4 class="fw-bold mb-1">@Model.Nombre</h4>
+                        <p class="text-muted mb-3">Cliente Registrado</p>
+                        
+                        <div class="d-flex justify-content-center gap-2 mb-4">
+                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">
+                                <i class="fa-solid fa-id-card me-1"></i> ID: @Model.Id
+                            </span>
+                        </div>
+
+                        <ul class="list-group list-group-flush text-start small">
+                            <li class="list-group-item bg-transparent px-0 d-flex justify-content-between">
+                                <span class="text-muted">Correo:</span>
+                                <span class="fw-bold text-dark text-break">@Model.Correo</span>
+                            </li>
+                            <li class="list-group-item bg-transparent px-0 d-flex justify-content-between">
+                                <span class="text-muted">Fecha Registro:</span>
+                                <span class="fw-bold text-dark">@System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(Model.FechaRegistro.ToString("dd MMM yyyy", new System.Globalization.CultureInfo("es-ES")))</span>
+                            </li>
+                            <li class="list-group-item bg-transparent px-0 d-flex justify-content-between">
+                                <span class="text-muted">Total Reservas:</span>
+                                <span class="fw-bold text-dark">@(reservas?.Count ?? 0)</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLUMNA DERECHA: HISTORIAL DE RESERVAS -->
+            <div class="col-md-8 mb-4">
+               <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                   <div class="card-header bg-white py-3">
+                       <h5 class="fw-bold mb-0">📅 Historial de Reservas</h5>
+                   </div>
+                   <div class="card-body p-0">
+                       @if (reservas != null && reservas.Any())
+                       {
+                           <div class="list-group list-group-flush">
+                               @foreach (var reserva in reservas)
+                               {
+                                   var estadoColor = reserva.Estado switch
+                                   {
+                                       "Confirmada" => "success",
+                                       "Pendiente" => "warning",
+                                       "Cancelada" => "danger",
+                                       _ => "secondary"
+                                   };
+                                   
+                                   var estadoIcon = reserva.Estado switch
+                                   {
+                                       "Confirmada" => "check-circle",
+                                       "Pendiente" => "clock",
+                                       "Cancelada" => "times-circle",
+                                       _ => "question-circle"
+                                   };
+
+                                   <div class="list-group-item p-3 border-bottom-0 border-top" style="border-color: #f0f0f0;">
+                                       <div class="d-flex justify-content-between align-items-center">
+                                           <div>
+                                               <!-- Estado Badge -->
+                                               <span class="badge bg-@estadoColor bg-opacity-10 text-@estadoColor mb-2 border border-@estadoColor border-opacity-25">
+                                                   <i class="fa-solid fa-@estadoIcon me-1"></i> @reserva.Estado.ToUpper()
+                                               </span>
+                                               
+                                               <h5 class="fw-bold mb-1 text-dark">
+                                                   @System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(reserva.FechaHora.ToString("dddd, dd MMMM yyyy", new System.Globalization.CultureInfo("es-ES"))) | @reserva.FechaHora.ToString("HH:mm")
+                                               </h5>
+                                               <div class="text-muted small">
+                                                   <span><i class="fa-solid fa-users me-1"></i> Mesa para @reserva.NumeroPersonas</span>
+                                                   @if (!string.IsNullOrEmpty(reserva.CuponUsado))
+                                                   {
+                                                       <span class="ms-3"><i class="fa-solid fa-ticket me-1"></i> Cupón: @reserva.CuponUsado</span>
+                                                   }
+                                               </div>
+                                           </div>
+                                           <div class="text-end">
+                                               @if (reserva.Estado == "Confirmada" && reserva.FechaHora < DateTime.Now)
+                                               {
+                                                    <span class="badge rounded-pill bg-light text-success fw-bold px-3 py-2">
+                                                        <i class="fa-solid fa-thumbs-up me-1"></i> ¡Listo!
+                                                    </span>
+                                               }
+                                           </div>
+                                       </div>
+                                   </div>
+                               }
+                           </div>
+                       }
+                       else
+                       {
+                           <div class="p-5 text-center text-muted">
+                               <i class="fa-regular fa-calendar-xmark fa-3x mb-3 text-secondary opacity-50"></i>
+                               <p class="mb-0">Este cliente no tiene reservas registradas.</p>
+                           </div>
+                       }
+                   </div>
+               </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,106 @@
+﻿@model IEnumerable<WEBAPPmesaGo.Models.Plato>
+@{
+    ViewData["Title"] = "Nuestro Menú";
+    // Obtenemos la lista de categorías únicas para crear los botones de filtro
+    var categoriasList = Model.Select(p => p.Categoria).Distinct().OrderBy(c => c).ToList();
+}
+
+<div class="container mt-4">
+
+    <div class="menu-tabs">
+        <a href="#" class="menu-tab-item active">NUESTRO MENÚ</a>
+        <a asp-controller="Portal" asp-action="Reservar" class="menu-tab-item">RESERVAS</a>
+        <a asp-controller="Cupones" asp-action="Index" class="menu-tab-item">CUPONES</a>
+    </div>
+
+    <div class="text-center mb-4">
+        <h1 class="menu-main-title display-5">COMIDA TÍPICA</h1>
+        <p class="text-muted">Selecciona una categoría para filtrar</p>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-warning text-center">Estamos cocinando. ¡Vuelve pronto! 🍳</div>
+    }
+    else
+    {
+        <div class="filter-container">
+            <button class="filter-btn active" data-filter="all">TODOS</button>
+
+            @foreach (var cat in categoriasList)
+            {
+                <button class="filter-btn" data-filter="@cat">@cat.ToUpper()</button>
+            }
+        </div>
+
+        <div class="row g-4" id="platos-grid">
+            @foreach (var plato in Model)
+            {
+                // 'dish-item' y 'data-category' sirven para que funcione el filtro con JS
+                <div class="col-lg-6 dish-item" data-category="@plato.Categoria">
+                    <div class="card border-0 shadow-sm h-100 overflow-hidden">
+                        <div class="card-body p-2">
+                            <div class="d-flex align-items-center h-100">
+
+                                <div class="flex-shrink-0 me-3">
+                                    @if (!string.IsNullOrEmpty(plato.ImagenUrl))
+                                    {
+                                        // Solución: Usar /img/ directo, ya que ~ no se renderiza en variables
+                                        var imgSrc = plato.ImagenUrl.StartsWith("http") ? plato.ImagenUrl : "/img/" + plato.ImagenUrl;
+                                        <img src="@imgSrc" alt="@plato.Nombre"
+                                             class="rounded-3"
+                                             style="width: 110px; height: 110px; object-fit: cover;"
+                                             onerror="this.onerror=null;this.src='/img/plato_default.png'">
+                                    }
+                                    else
+                                    {
+                                        <img src="/img/plato_default.png"
+                                             class="rounded-3" alt="Sin imagen"
+                                             style="width: 110px; height: 110px; object-fit: cover;">
+                                    }
+                                </div>
+
+                                <div class="flex-grow-1 py-2">
+                                    <h5 class="fw-bold mb-1 text-dark">@plato.Nombre</h5>
+                                    <p class="text-muted small mb-2">
+                                        @plato.Descripcion
+                                    </p>
+                                    <small class="text-uppercase text-primary fw-bold" style="font-size: 0.7rem; letter-spacing: 1px;">
+                                        @plato.Categoria
+                                    </small>
+                                </div>
+
+                                <div class="flex-shrink-0 ms-3 text-end align-self-center px-3">
+                                    <h4 class="text-primary fw-black mb-0" style="font-family: var(--font-heading);">$@plato.Precio.ToString("0.00")</h4>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('.filter-btn').click(function () {
+                // 1. Efecto visual en los botones (cambiar el negro)
+                $('.filter-btn').removeClass('active');
+                $(this).addClass('active');
+
+                // 2. Lógica de filtrado
+                var categoryToFilter = $(this).attr('data-filter');
+
+                if (categoryToFilter == 'all') {
+                    $('.dish-item').fadeIn('fast');
+                } else {
+                    $('.dish-item').hide();
+                    $('.dish-item[data-category="' + categoryToFilter + '"]').fadeIn('fast');
+                }
+            });
+        });
+    </script>
+}

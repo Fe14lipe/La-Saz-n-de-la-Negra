@@ -1,0 +1,118 @@
+@model WEBAPPmesaGo.Models.Plato
+
+@{
+    ViewData["Title"] = "Gestionar Receta";
+    var todosIngredientes = ViewBag.TodosIngredientes as List<WEBAPPmesaGo.Models.Ingrediente>;
+}
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark">🍳 Receta: @Model.Nombre</h2>
+            <p class="text-muted">Define la preparación y los ingredientes para el control de stock.</p>
+        </div>
+        <a asp-controller="AdminMenu" asp-action="Index" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-arrow-left me-1"></i> Volver al Menú
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <!-- Columna Izquierda: Ingredientes Requeridos (Como lista textual editable) -->
+        <div class="col-md-7">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">📜 Preparación / Receta</h5>
+                    <button type="submit" form="formPreparacion" class="btn btn-sm btn-primary fw-bold">
+                        <i class="fa-solid fa-floppy-disk me-1"></i> Guardar Texto
+                    </button>
+                </div>
+                <div class="card-body">
+                    <form asp-action="GuardarPreparacion" method="post" id="formPreparacion" class="h-100">
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <textarea name="preparacion" class="form-control border-0 h-100 fs-5" style="resize: none; min-height: 400px;" placeholder="Escribe aquí los pasos de la receta...">@Model.Preparacion</textarea>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Columna Derecha: Agregar Ingrediente (Lógica de Stock) -->
+        <div class="col-md-5">
+            <div class="card border-0 shadow-sm rounded-4 bg-light mb-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3">🔢 Control de Stock</h5>
+                    <p class="small text-muted mb-3">Agrega aquí los ingredientes que el sistema debe descontar automáticamente del inventario al vender este plato.</p>
+                    
+                    <form asp-action="AgregarIngredientePlato" method="post">
+                        <input type="hidden" name="platoId" value="@Model.Id" />
+                        
+                        <div class="mb-3">
+                            <label class="form-label small text-muted fw-bold">Seleccionar Ingrediente</label>
+                            <select name="ingredienteId" class="form-select form-select-lg">
+                                @foreach (var ing in todosIngredientes)
+                                {
+                                    <option value="@ing.Id">@ing.Nombre (@ing.Unidad)</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label small text-muted fw-bold">Cantidad a descontar</label>
+                            <input type="number" name="cantidad" step="0.01" min="0.01" class="form-control form-control-lg" placeholder="0.00" required />
+                        </div>
+
+                        <button type="submit" class="btn btn-warning w-100 rounded-pill fw-bold py-2 text-dark">
+                            <i class="fa-solid fa-plus me-1"></i> Agregar para Descuento
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Lista de ingredientes vinculados -->
+            <div class="card border-0 shadow-sm rounded-4">
+                 <div class="card-header bg-white py-3">
+                    <h6 class="fw-bold mb-0 text-muted">Ingredientes Vinculados (Stock)</h6>
+                </div>
+                <div class="card-body p-0">
+                     @if (!Model.Ingredientes.Any())
+                    {
+                        <div class="text-center py-4 text-muted small">
+                            <i class="fa-solid fa-link-slash fa-2x mb-2 opacity-50"></i>
+                            <p class="mb-0">No hay ingredientes vinculados para stock.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <table class="table table-hover mb-0 align-middle small">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-3">Ingrediente</th>
+                                    <th>Cant.</th>
+                                    <th class="text-end pe-3"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var pi in Model.Ingredientes)
+                                {
+                                    <tr>
+                                        <td class="ps-3 fw-bold">@pi.Ingrediente?.Nombre</td>
+                                        <td>@pi.CantidadRequerida @pi.Ingrediente?.Unidad</td>
+                                        <td class="text-end pe-3">
+                                            <form asp-action="EliminarIngredientePlato" method="post">
+                                                <input type="hidden" name="id" value="@pi.Id" />
+                                                <input type="hidden" name="platoId" value="@Model.Id" />
+                                                <button class="btn btn-sm btn-link text-danger p-0">
+                                                    <i class="fa-solid fa-xmark"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>

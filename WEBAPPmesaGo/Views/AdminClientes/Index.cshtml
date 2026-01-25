@@ -1,0 +1,134 @@
+@model IEnumerable<WEBAPPmesaGo.Models.Cliente>
+
+@{
+    ViewData["Title"] = "Historial de Clientes";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .admin-header {
+        background-color: white;
+        padding: 20px;
+        border-bottom: 1px solid #ddd;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    /* Estilos copiados de AdminReservas para consistencia */
+    .admin-pill {
+        border: 1px solid #ccc;
+        border-radius: 20px;
+        padding: 5px 15px;
+        color: #666;
+        font-weight: bold;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        text-decoration: none;
+        margin-left: 5px;
+        transition: all 0.2s;
+    }
+
+    .admin-pill:hover {
+        background-color: #f9f9f9;
+        color: #333;
+    }
+
+    .admin-pill.active {
+        background-color: #1a1a1a;
+        color: white;
+        border-color: #1a1a1a;
+    }
+</style>
+
+<div class="container-fluid bg-light min-vh-100 p-0">
+    
+    <!-- HEADER ADMINISTRACIÓN -->
+    <div class="admin-header shadow-sm d-flex flex-column align-items-stretch">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h2 class="fw-bold mb-0 text-dark" style="font-family: 'Arial Black';">ADMINISTRACIÓN</h2>
+                <p class="text-muted mb-0">Gestión de Clientes</p>
+            </div>
+            <div>
+                <!-- Espacio para botones de acción globales si se requieren -->
+            </div>
+        </div>
+
+        <!-- NAVEGACIÓN UNIFICADA -->
+        <partial name="_AdminNav" />
+    </div>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <div class="container mt-4">
+        @if (!Model.Any())
+        {
+            <div class="alert alert-info text-center p-5 rounded-4 border-0 shadow-sm bg-white">
+                <i class="fa-regular fa-folder-open fa-3x mb-3 text-secondary"></i>
+                <h4 class="fw-bold">No hay clientes registrados aún</h4>
+                <p class="text-muted">A medida que los usuarios se registren, aparecerán aquí.</p>
+            </div>
+        }
+        else
+        {
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden position-relative">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">👥 Historial de Clientes</h5>
+                    <div>
+                        <button class="btn btn-outline-dark fw-bold btn-sm me-2" disabled>
+                            Total: @Model.Count()
+                        </button>
+                        <form asp-action="BorrarHistorial" method="post" class="d-inline" onsubmit="return confirm('⚠️ ¿Estás seguro de BORRAR TODO el historial de clientes? Esta acción es irreversible.');">
+                            <button type="submit" class="btn btn-primary fw-bold btn-sm" style="background-color: #ff6600; border-color: #ff6600;">
+                                <i class="fa-solid fa-trash me-1"></i> BORRAR HISTORIAL
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="p-3 border-0">ID</th>
+                                    <th class="border-0">Nombre</th>
+                                    <th class="border-0">Correo</th>
+                                    <th class="border-0">Fecha Registro</th>
+                                    <th class="text-end p-3 border-0">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model)
+                                {
+                                    <tr>
+                                        <td class="p-3 fw-bold text-muted">#@item.Id</td>
+                                        <td class="fw-bold text-dark">@item.Nombre</td>
+                                        <td>
+                                            <a href="mailto:@item.Correo" class="text-decoration-none text-muted">
+                                                <i class="fa-solid fa-envelope me-1"></i> @item.Correo
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light text-dark border">
+                                                <i class="fa-regular fa-calendar me-1"></i>
+                                                @item.FechaRegistro.ToString("dd/MM/yyyy HH:mm")
+                                            </span>
+                                        </td>
+                                        <td class="text-end p-3">
+                                            <a asp-action="Historial" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary rounded-circle" title="Ver Historial">
+                                                <i class="fa-solid fa-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

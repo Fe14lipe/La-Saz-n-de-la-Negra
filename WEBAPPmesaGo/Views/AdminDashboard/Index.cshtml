@@ -1,0 +1,252 @@
+@{
+    ViewData["Title"] = "Dashboard Tiempo Real";
+}
+
+<div class="container-fluid bg-light min-vh-100 p-4">
+    <h2 class="fw-bold text-dark mb-4">Panel Administrativo</h2>
+
+    <!-- BARRA DE NAVEGACIÓN UNIFICADA -->
+    <partial name="_AdminNav" />
+
+    <!-- CONTENEDOR ZIG-ZAG CON SCROLL HORIZONTAL -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex align-items-center gap-3">
+        <button class="btn btn-outline-secondary rounded-pill" onclick="changeWeek(-7)">
+            <i class="fa-solid fa-chevron-left"></i> Anterior
+        </button>
+        <span class="fw-bold fs-5 text-dark" id="txtRangoSemana">Semana Actual</span>
+        <button class="btn btn-outline-secondary rounded-pill" onclick="changeWeek(7)">
+            Siguiente <i class="fa-solid fa-chevron-right"></i>
+        </button>
+    </div>
+    <div class="small text-muted">
+        <i class="fa-solid fa-circle-info me-1"></i> Mostrando reservas y ventas de la semana seleccionada
+    </div>
+</div>
+
+<div class="d-flex overflow-auto pb-4 gap-4" style="scroll-snap-type: x mandatory;">
+    
+    <!-- CARD 1: RESERVAS (Pie Chart) -->
+    <div class="card shadow-sm border-0 flex-shrink-0" style="width: 500px; scroll-snap-align: center;">
+        <div class="card-header bg-white fw-bold text-primary">
+            <i class="fa-solid fa-chart-pie me-2"></i> Estado de Reservas
+        </div>
+        <div class="card-body">
+            <canvas id="reservasChart" width="300" height="300"></canvas>
+        </div>
+        <div class="card-footer bg-white text-muted small text-center">
+            Actualizando cada 5s... <i class="fa-solid fa-satellite-dish text-success fa-beat-fade"></i>
+        </div>
+    </div>
+
+    <!-- CARD 2: VENTAS (Line Chart) -->
+    <div class="card shadow-sm border-0 flex-shrink-0" style="width: 800px; scroll-snap-align: center;">
+        <div class="card-header bg-white fw-bold text-primary">
+            <i class="fa-solid fa-chart-line me-2"></i> Movimiento de Ventas
+        </div>
+        <div class="card-body">
+            <canvas id="ventasChart" width="500" height="350"></canvas>
+        </div>
+        <div class="card-footer bg-white text-muted small text-center">
+            Registro Real de Ventas
+        </div>
+    </div>
+
+    <!-- CARD 3: KPIs -->
+    <div class="card shadow-sm border-0 flex-shrink-0 bg-transparent" style="width: 400px; scroll-snap-align: center;">
+            <div class="d-flex flex-column gap-3 h-100 justify-content-center">
+                <div class="bg-primary text-white p-4 rounded-3 shadow-sm text-center">
+                    <h1 class="display-4 fw-bold" id="totalReservas">0</h1>
+                    <span class="text-uppercase small opacity-75">Reservas Totales</span>
+                </div>
+                <div class="text-white p-4 rounded-3 shadow-sm text-center" style="background-color: #FF6600;">
+                    <h1 class="display-4 fw-bold" id="totalVentas">$0.00</h1>
+                    <span class="text-uppercase small opacity-75">Ingresos Estimados</span>
+                </div>
+            </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // --- ESTADO GLOBAL ---
+    let currentDate = new Date(); // Fecha actual que se manipula al navegar
+    let currentDishDetails = []; // Detalles de platos por día (array de arrays)
+    let currentReservationDetails = []; // Detalles de reservas por día (array de arrays)
+
+    // --- CONFIGURACIÓN DE GRÁFICAS ---
+
+    // 1. Gráfica de Reservas
+    const ctxReservas = document.getElementById('reservasChart').getContext('2d');
+    const reservasChart = new Chart(ctxReservas, {
+        type: 'doughnut',
+        data: {
+            labels: ['Pendientes', 'Confirmadas', 'Canceladas'],
+            datasets: [{
+                data: [0, 0, 0], 
+                backgroundColor: ['#ffc107', '#198754', '#dc3545'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+
+    // 2. Gráfica de Ventas y Reservas
+    const ctxVentas = document.getElementById('ventasChart').getContext('2d');
+    const ventasChart = new Chart(ctxVentas, {
+        type: 'line',
+        data: {
+            labels: [], 
+            datasets: [
+                {
+                    label: 'Ventas del día', // Modificado etiqueta
+                    data: [],
+                    borderColor: '#FF6600', 
+                    backgroundColor: 'rgba(255, 102, 0, 0.2)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 5
+                },
+                {
+                    label: 'Reservas',
+                    data: [],
+                    borderColor: '#0d6efd',
+                    backgroundColor: 'rgba(13, 110, 253, 0.2)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 5
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: { beginAtZero: true, suggestedMax: 5 },
+                x: { grid: { display: false } }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        // Personalización del Tooltip
+                        title: function(tooltipItems) {
+                             return tooltipItems[0].label; // "Lun 19"
+                        },
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                label += context.parsed.y;
+                            }
+                            return label;
+                        },
+                        afterBody: function(tooltipItems) {
+                            // Solo mostrar detalles si estamos en el dataset de Ventas (index 0) y hay ventas
+                            const index = tooltipItems[0].dataIndex;
+                            const datasetIndex = tooltipItems[0].datasetIndex;
+                            
+                            // VENTAS (Dataset 0)
+                            if (datasetIndex === 0 && currentDishDetails[index] && currentDishDetails[index].length > 0) {
+                                return '\nPlatos vendidos:\n' + currentDishDetails[index].map(d => '• ' + d).join('\n');
+                            }
+                            
+                            // RESERVAS (Dataset 1)
+                            if (datasetIndex === 1 && currentReservationDetails[index] && currentReservationDetails[index].length > 0) {
+                                return '\nÚltimas Reservas:\n' + currentReservationDetails[index].map(r => '• ' + r).join('\n');
+                            }
+                            
+                            return '';
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // --- LÓGICA DE NAVEGACIÓN Y CARGA ---
+
+    function changeWeek(days) {
+        currentDate.setDate(currentDate.getDate() + days); // Sumar/restar días
+        actualizarDashboard(); // Recargar datos
+    }
+
+    // Calcular etiquetas de eje X basadas en 'currentDate'
+    function updateChartLabels(referenceDate) {
+        const d = new Date(referenceDate);
+        const day = d.getDay();
+        const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Ajustar a Lunes
+        const monday = new Date(d.setDate(diff));
+
+        const labels = [];
+        const daysES = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+        
+        for (let i = 0; i < 6; i++) {
+            const temp = new Date(monday);
+            temp.setDate(monday.getDate() + i);
+            labels.push(`${daysES[i]} ${temp.getDate()}`);
+        }
+        return labels;
+    }
+
+    async function actualizarDashboard() {
+        try {
+            // Enviamos la fecha actual en formato ISO para que el backend sepa qué semana cargar
+            const dateStr = currentDate.toISOString();
+            const response = await fetch(`/AdminDashboard/GetDashboardData?dateStr=${encodeURIComponent(dateStr)}`);
+            
+            if (!response.ok) throw new Error("Error de red");
+            
+            const data = await response.json();
+
+            // 1. Actualizar Gráfica Reservas
+            reservasChart.data.datasets[0].data = [
+                data.reservations.pendientes,
+                data.reservations.confirmadas,
+                data.reservations.canceladas
+            ];
+            reservasChart.update();
+
+            document.getElementById('totalReservas').innerText = 
+                data.reservations.pendientes + data.reservations.confirmadas + data.reservations.canceladas;
+
+            // 2. Actualizar Gráfica Ventas y Reservas (Ejes y Datos)
+            currentDishDetails = data.salesDetails || []; // Guardar detalles para el tooltip Ventas
+            currentReservationDetails = data.reservationsDetails || []; // Guardar detalles para el tooltip Reservas
+
+            ventasChart.data.labels = updateChartLabels(currentDate);
+            ventasChart.data.datasets[0].data = data.sales; // Ventas (Naranja)
+            ventasChart.data.datasets[1].data = data.reservationsWeekly; // Reservas (Azul)
+            ventasChart.update();
+
+            // 3. Actualizar Ingresos y Textos
+            // Formato de moneda
+            const formatter = new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+            });
+            document.getElementById('totalVentas').innerText = formatter.format(data.income);
+
+            // Actualizar Rango de Fecha en el UI
+            document.getElementById('txtRangoSemana').innerText = `Semana: ${data.startDate} - ${data.endDate}`;
+
+            console.log(`[Dashboard] Actualizado para fecha: ${currentDate.toDateString()}`);
+
+        } catch (error) {
+            console.error("Error al obtener datos:", error);
+        }
+    }
+
+    // Polling automático (sigue siendo útil para ver cambios en tiempo real en la semana actual)
+    setInterval(actualizarDashboard, 5000);
+    
+    // Carga inicial
+    actualizarDashboard();
+
+</script>

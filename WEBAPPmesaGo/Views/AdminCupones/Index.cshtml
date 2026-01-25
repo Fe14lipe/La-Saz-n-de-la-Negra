@@ -1,0 +1,185 @@
+@model IEnumerable<WEBAPPmesaGo.Models.Cupon>
+
+@{
+    ViewData["Title"] = "Gestión de Cupones";
+}
+
+<div class="container-fluid bg-light min-vh-100 p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark">Gestión de Cupones</h2>
+            <p class="text-muted">Crea, modifica y elimina cupones para la web principal.</p>
+        </div>
+    </div>
+
+    <!-- NAVEGACIÓN UNIFICADA -->
+    <partial name="_AdminNav" />
+
+    <div class="row">
+        <!-- FORMULARIO DE CREACIÓN -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+                <h5 class="fw-bold mb-3"><i class="fa-solid fa-plus-circle me-2 text-primary"></i>Nuevo Cupón</h5>
+                <form asp-action="Crear" method="post" onsubmit="return validateForm()">
+                    <div class="mb-3">
+                        <label class="form-label small text-muted">Código del Cupón</label>
+                        <input name="Codigo" class="form-control" placeholder="Ej. CARNAVAL" required style="text-transform: uppercase;" oninput="this.value = this.value.replace(/[^a-zA-ZñÑáéíóúÁÉÍÓÚ]/g, '').toUpperCase()">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-muted">Descripción</label>
+                        <input name="Descripcion" class="form-control" placeholder="Ej. 20% de descuento directo" required oninput="this.value = this.value.replace(/[^a-zA-ZñÑáéíóúÁÉÍÓÚ0-9%\s]/g, '')">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-muted">Porcentaje de Descuento (%)</label>
+                        <input name="Porcentaje" type="text" maxlength="3" class="form-control" placeholder="20" required oninput="this.value = this.value.replace(/[^0-9]/g, ''); if(this.value > 100) this.value = 100;">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-muted">Válido Hasta</label>
+                        <input name="FechaExpiracion" type="date" class="form-control" required 
+                               min="@DateTime.Now.ToString("yyyy-MM-dd")" 
+                               max="@DateTime.Now.AddYears(1).ToString("yyyy-MM-dd")"
+                               value="@DateTime.Now.AddDays(7).ToString("yyyy-MM-dd")"
+                               id="txtFecha">
+                        <script>
+                            // LISTA DE FERIADOS 2026 (ECUADOR)
+                            const holidays2026 = [
+                                "2026-01-01", // Año Nuevo
+                                "2026-02-16", // Carnaval (Lunes)
+                                "2026-02-17", // Carnaval (Martes)
+                                "2026-04-03", // Viernes Santo (Aprox)
+                                "2026-05-01", // Día del Trabajo
+                                "2026-05-24", // Batalla del Pichincha
+                                "2026-08-10", // Primer Grito de Independencia
+                                "2026-10-09", // Indep. Guayaquil
+                                "2026-11-02", // Día de los Difuntos
+                                "2026-11-03", // Indep. Cuenca
+                                "2026-12-25"  // Navidad
+                            ];
+
+                            function validateForm() {
+                                const input = document.getElementById('txtFecha');
+                                const checkbox = document.getElementById('checkFeriado');
+                                
+                                if (!input.value) return true; // Dejar pasar si está vacio (el required lo ataja)
+
+                                const dateVal = input.value; // YYYY-MM-DD
+                                const date = new Date(dateVal);
+                                
+                                // Ajuste de zona horaria simple
+                                const dateStr = date.toISOString().split('T')[0]; // O mejor, usar dateVal directo
+                                
+                                const today = new Date();
+                                today.setHours(0,0,0,0);
+                                const maxDate = new Date();
+                                maxDate.setFullYear(today.getFullYear() + 1);
+                                
+                                // 1. Validar Rango
+                                if(date < today) {
+                                    alert('La fecha no puede estar en el pasado.');
+                                    return false;
+                                } else if(date > maxDate) {
+                                    alert('La fecha de expiración no puede exceder 1 año en el futuro.');
+                                    return false;
+                                }
+
+                                // 2. Validar Feriado
+                                if (checkbox.checked) {
+                                    // Comparamos el valor del input directo (YYYY-MM-DD) contra la lista
+                                    if (!holidays2026.includes(dateVal)) {
+                                        alert('Lo sentimos, este día no es feriado. Escoge un día que sí sea (Ej. Carnaval 16/02).');
+                                        return false;
+                                    }
+                                }
+                                
+                                return true;
+                            }
+                        </script>
+                    </div>
+                    <div class="mb-3 form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="checkFeriado" name="EsFeriado" value="true">
+                        <label class="form-check-label fw-bold text-warning" for="checkFeriado">
+                            <i class="fa-solid fa-star me-1"></i> ¿Es de Feriado? (Color Naranja)
+                        </label>
+                        <small class="d-block text-muted">Si se activa, el cupón aparecerá resaltado en naranja en la web.</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 fw-bold rounded-pill">
+                        <i class="fa-solid fa-save me-2"></i> Guardar Cupón
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- LISTA DE CUPONES -->
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-body p-0">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="p-3">Código</th>
+                                <th>Descripción</th>
+                                <th class="text-center">Desc.</th>
+                                <th class="text-center">Tipo</th>
+                                <th class="text-center">Estado</th>
+                                <th class="text-end p-3">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!Model.Any())
+                            {
+                                <tr>
+                                    <td colspan="6" class="text-center p-5 text-muted">
+                                        No hay cupones creados aún.
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var item in Model)
+                                {
+                                    <tr>
+                                        <td class="p-3 fw-bold text-primary">@item.Codigo</td>
+                                        <td>@item.Descripcion</td>
+                                        <td class="text-center fw-bold">@item.Porcentaje%</td>
+                                        <td class="text-center">
+                                            @if (item.EsFeriado)
+                                            {
+                                                <span class="badge bg-warning text-dark border border-warning">FERIADO 🍊</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-light text-dark border">NORMAL ⚪</span>
+                                            }
+                                        </td>
+                                        <td class="text-center">
+                                            @if (item.Activo)
+                                            {
+                                                 <span class="badge bg-success bg-opacity-10 text-success">Activo</span>
+                                            }
+                                            else
+                                            {
+                                                 <span class="badge bg-danger bg-opacity-10 text-danger">Inactivo</span>
+                                            }
+                                        </td>
+                                        <td class="text-end p-3">
+                                            <form asp-action="ToggleEstado" asp-route-id="@item.Id" method="post" class="d-inline">
+                                                <button class="btn btn-sm btn-outline-secondary" title="Cambiar Estado">
+                                                    <i class="fa-solid fa-power-off"></i>
+                                                </button>
+                                            </form>
+                                            <form asp-action="Eliminar" asp-route-id="@item.Id" method="post" class="d-inline" onsubmit="return confirm('¿Eliminar cupón?');">
+                                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,496 @@
+@{
+    Layout = null; // Sin layout para diseño completo personalizado
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Acceso - La Sazón de la Negra</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        body {
+            background-color: #4B2C20; /* Marrón base */
+            /* Fondo de imagen con overlay oscuro (0.6 de opacidad negra) */
+            background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('/img/Fondo.png') no-repeat center center;
+            background-size: cover;
+            background-attachment: fixed; /* Efecto Parallax opcional */
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .auth-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            overflow: hidden;
+            width: 900px;
+            max-width: 95%;
+            min-height: 600px;
+            display: flex;
+            position: relative;
+        }
+
+        /* BANNER LATERAL / FONDO IMAGEN */
+        .auth-banner {
+            flex: 1;
+            /* Fondo sólido naranja degradado (Sin foto) */
+            background: linear-gradient(135deg, #ff8c42 0%, #ff6600 100%);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        /* Overlay ELIMINADO (Ya no es necesario sin foto) */
+        .overlay {
+            display: none;
+        }
+
+        .banner-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* FORMS AREA */
+        .auth-forms {
+            flex: 1;
+            padding: 50px;
+            background: white;
+            position: relative;
+        }
+
+        .nav-pills .nav-link {
+            color: #ccc;
+            font-weight: bold;
+            font-size: 1.2rem;
+            background: none;
+            border: none;
+            padding-bottom: 10px;
+            border-bottom: 3px solid transparent;
+            border-radius: 0;
+            margin-right: 20px;
+        }
+
+        .nav-pills .nav-link.active {
+            color: #ff6600;
+            background: none;
+            border-bottom: 3px solid #ff6600;
+        }
+
+        .form-control {
+            background-color: #ffffff; /* Fondo blanco normal */
+            border: 1px solid #ced4da; /* Borde gris estándar */
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            color: #000; /* Texto negro */
+        }
+
+        .form-control:focus {
+            background-color: #fff;
+            border-color: #ff6600;
+            box-shadow: 0 0 0 0.25rem rgba(255, 102, 0, 0.25);
+            color: #333;
+        }
+
+        .btn-primary {
+            background-color: #ff6600;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            width: 100%;
+            transition: all 0.3s;
+        }
+
+        .btn-primary:hover {
+            background-color: #e65c00;
+            transform: translateY(-2px);
+        }
+
+        .social-btn {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            background: white;
+            color: #555;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .social-btn:hover {
+            background-color: #f9f9f9;
+            color: #333;
+        }
+
+        .social-btn i {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+
+        /* CORRECCIÓN DE SIMETRÍA PARA EL OJITO */
+        .input-group .form-control {
+            margin-bottom: 0 !important;
+            border-right: none;
+            border-top-right-radius: 0 !important;
+            border-bottom-right-radius: 0 !important;
+        }
+
+        .input-group .btn {
+            border: 1px solid #ced4da; /* Mismo borde que el input */
+            border-left: none;
+            border-top-left-radius: 0 !important;
+            border-bottom-left-radius: 0 !important;
+            border-top-right-radius: 10px !important;
+            border-bottom-right-radius: 10px !important;
+            background-color: white;
+            color: #6c757d;
+            padding: 0 15px; /* Ajuste para igualar grosor visual */
+            margin-bottom: 0;
+            display: flex;
+            align-items: center; /* Centrar icono verticalmente */
+        }
+
+        .input-group .btn:hover {
+            background-color: white;
+            color: #ff6600;
+            border-color: #ced4da;
+        }
+        
+        .input-group:focus-within .form-control,
+        .input-group:focus-within .btn {
+            border-color: #ff6600;
+            box-shadow: none; /* Opcional: quitar o ajustar shadow */
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 20px 0;
+            color: #aaa;
+        }
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #eee;
+        }
+        .divider:not(:empty)::before { margin-right: .5em; }
+        .divider:not(:empty)::after { margin-left: .5em; }
+
+        .forgot-link {
+            color: #ff6600;
+            text-decoration: none;
+            font-size: 0.9rem;
+            float: right;
+            margin-bottom: 20px;
+        }
+
+        /* RESPONSIVE */
+        @@media (max-width: 768px) {
+            .auth-container {
+                flex-direction: column;
+                height: auto;
+                width: 100%;
+                border-radius: 0;
+            }
+            .auth-banner {
+                display: none; /* Ocultar banner en móvil para enfocar en login */
+            }
+            .auth-forms {
+                padding: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="auth-container">
+        
+        <!-- SECCIÓN IZQUIERDA: IMAGEN / BRANDING -->
+        <div class="auth-banner">
+            <div class="overlay"></div>
+            <div class="banner-content">
+                <h1 class="fw-bold mb-3">La Sazón de la Negra</h1>
+                <p class="lead mb-4">El auténtico sabor esmeraldeño en tu mesa.</p>
+                <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+                    <a href="/Portal/Reservar" class="btn btn-outline-light px-4">Volver a Reservas</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN DERECHA: FORMULARIOS -->
+        <div class="auth-forms">
+            
+            <!-- ALERTAS -->
+            @if (ViewBag.Error != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fa-solid fa-circle-exclamation me-2"></i> @ViewBag.Error
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+            @if (TempData["Mensaje"] != null)
+            {
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    <i class="fa-solid fa-circle-info me-2"></i> @TempData["Mensaje"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <!-- TABS (Ahora centrados) -->
+            <ul class="nav nav-pills mb-4 justify-content-center" id="pills-tab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link @(ViewBag.SignupError == null ? "active" : "")" id="pills-login-tab" data-bs-toggle="pill" data-bs-target="#pills-login" type="button" role="tab">Ingresar</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link @(ViewBag.SignupError != null ? "active" : "")" id="pills-signup-tab" data-bs-toggle="pill" data-bs-target="#pills-signup" type="button" role="tab">Registrarse</button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="pills-tabContent">
+                
+                <!-- LOGIN FORM -->
+                <div class="tab-pane fade @(ViewBag.SignupError == null ? "show active" : "")" id="pills-login" role="tabpanel">
+                    <form action="/Portal/Login" method="post">
+                        <input type="email" name="correo" class="form-control" placeholder="Correo Electrónico" required>
+                        <input type="password" name="password" class="form-control" placeholder="Contraseña" required>
+                        
+                        <a href="#" class="forgot-link" data-bs-toggle="modal" data-bs-target="#forgotModal">¿Olvidaste tu contraseña?</a>
+                        
+                        <button type="submit" class="btn btn-primary mb-3">Iniciar Sesión</button>
+                    </form>
+
+                    <p class="text-center text-muted small">Oye ñaño, ¿no tienes cuenta? <a href="#" onclick="document.getElementById('pills-signup-tab').click(); return false;">Regístrate</a></p>
+                </div>
+
+                <!-- SIGNUP FORM -->
+                <div class="tab-pane fade @(ViewBag.SignupError != null ? "show active" : "")" id="pills-signup" role="tabpanel">
+                    
+                    @if (ViewBag.SignupError != null)
+                    {
+                        <div class="alert alert-warning py-2 mb-3 small">
+                            @ViewBag.SignupError
+                        </div>
+                    }
+
+                    <form action="/Portal/SignUp" method="post" id="formSignup">
+                        <input type="text" name="nombre" class="form-control" placeholder="Nombre Completo" required 
+                               value="@ViewBag.Nombre"
+                               oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '')"
+                               title="Solo se permiten letras y espacios">
+                        <input type="email" name="correo" id="txtCorreoReg" class="form-control" placeholder="Correo Electrónico" required value="@ViewBag.Correo">
+                        <div class="input-group mb-2">
+                            <input type="password" name="password" id="regPass" class="form-control" placeholder="Crear Contraseña" required minlength="6">
+                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('regPass', 'iconPass1')">
+                                <i class="fa-solid fa-eye" id="iconPass1"></i>
+                            </button>
+                        </div>
+
+                        <div class="input-group mb-3">
+                            <input type="password" name="confirmPassword" id="regPassConfirm" class="form-control" placeholder="Confirmar Contraseña" required minlength="6">
+                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('regPassConfirm', 'iconPass2')">
+                                <i class="fa-solid fa-eye" id="iconPass2"></i>
+                            </button>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary mb-3">Registrarse</button>
+                    </form>
+                     <p class="text-center text-muted small">Sé serio ñaño, ¿ya tienes cuenta? <a href="#" onclick="document.getElementById('pills-login-tab').click(); return false;">Inicia Sesión</a></p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL "VER MI CONTRASEÑA" -->
+    <div class="modal fade" id="forgotModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold">Recuperar Contraseña</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-muted mb-4">Ingresa tu correo electrónico para visualizar tu contraseña.</p>
+                    
+                    <div class="mb-3">
+                        <input type="email" id="recoverEmail" class="form-control" placeholder="Ingresa tu correo" required>
+                    </div>
+                    
+                    <div class="d-grid mb-4">
+                        <button type="button" onclick="verPassword()" class="btn btn-primary fw-bold" style="background: #ff6600; border: none;">
+                            Ver mi contraseña
+                        </button>
+                    </div>
+
+                    <!-- CAJA BORROSA -->
+                    <div id="passwordResult" style="display: none;">
+                        <p class="small text-muted text-center mb-2">Pasa el mouse para ver:</p>
+                        <div class="password-blur-box">
+                            <span id="passwordText">PASSWORD</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ESTILOS Y SCRIPTS ESPECÍFICOS PARA ESTA VISTA -->
+    <style>
+        .password-blur-box {
+            background: #f8f9fa;
+            color: #ff6600;
+            border: 2px dashed #ff6600;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 900;
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+            
+            /* EFECTO BORROSO INICIAL */
+            filter: blur(8px);
+            -webkit-filter: blur(8px);
+            cursor: pointer;
+            transition: all 0.4s ease;
+        }
+
+        .password-blur-box:hover {
+            /* SE QUITA LO BORROSO AL PASAR MOUSE */
+            filter: blur(0);
+            -webkit-filter: blur(0);
+            background: white;
+            border-style: solid;
+        }
+    </style>
+
+    <script>
+        function verPassword() {
+            var correo = document.getElementById('recoverEmail').value;
+            if(!correo) {
+                alert("Por favor ingresa un correo.");
+                return;
+            }
+
+            // Llamada AJAX nativa (fetch)
+            fetch('/Portal/RecuperarPasswordAxios', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ correo: correo })
+            })
+            .then(response => response.json())
+            .then(data => {
+                var resultDiv = document.getElementById('passwordResult');
+                var passText = document.getElementById('passwordText');
+                
+                if(data.success) {
+                    resultDiv.style.display = 'block';
+                    passText.textContent = data.password;
+                } else {
+                    alert('Correo no encontrado 😞');
+                    resultDiv.style.display = 'none';
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        // FUNCION PARA MOSTRAR/OCULTAR CONTRASEÑA EN INPUTS
+        function togglePassword(inputId, iconId) {
+            var input = document.getElementById(inputId);
+            var icon = document.getElementById(iconId);
+
+            if (input.type === "password") {
+                input.type = "text";
+                icon.classList.remove("fa-eye");
+                icon.classList.add("fa-eye-slash");
+            } else {
+                input.type = "password";
+                icon.classList.remove("fa-eye-slash");
+                icon.classList.add("fa-eye");
+            }
+        }
+
+
+        // VALIDACIÓN DE CORREO DUPLICADO
+        document.addEventListener("DOMContentLoaded", function() {
+            var formSignup = document.getElementById('formSignup');
+            if(formSignup) {
+                formSignup.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    var correo = document.getElementById('txtCorreoReg').value;
+                    
+                    if(correo) {
+                        try {
+                            const response = await fetch(`/Portal/CheckEmailExists?correo=${encodeURIComponent(correo)}`);
+                            const data = await response.json();
+
+                            if(data.exists) {
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: '¡Correo ya registrado!',
+                                    text: 'Este correo ya tiene una cuenta. Intenta iniciar sesión.',
+                                    confirmButtonColor: '#ff6600'
+                                });
+                                return;
+                            }
+                        } catch(error) {
+                            console.error("Error al validar email:", error);
+                        }
+                    }
+
+                    // Si pasa, enviamos
+                    formSignup.submit();
+                });
+            }
+        });
+    </script>
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- ALERTA DE USUARIO EXISTENTE -->
+    @if (ViewBag.SignupError != null)
+    {
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                Swal.fire({
+                    icon: 'warning',
+                    title: '¡Usuario ya registrado!',
+                    text: '@Html.Raw(ViewBag.SignupError)',
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#ff6600',
+                    background: '#fff',
+                    color: '#333'
+                });
+            });
+        </script>
+    }
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,409 @@
+@model IEnumerable<WEBAPPmesaGo.Models.Ingrediente>
+
+@{
+    ViewData["Title"] = "Inventario";
+}
+
+<style>
+    .admin-header {
+        background-color: white;
+        padding: 20px;
+        border-bottom: 1px solid #ddd;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .admin-pill {
+        border: 1px solid #ccc;
+        border-radius: 20px;
+        padding: 5px 15px;
+        color: #666;
+        font-weight: bold;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        text-decoration: none;
+        margin-left: 5px;
+        transition: all 0.2s;
+    }
+
+    .admin-pill:hover {
+        background-color: #f9f9f9;
+        color: #333;
+    }
+
+    .admin-pill.active {
+        background-color: #1a1a1a;
+        color: white;
+        border-color: #1a1a1a;
+    }
+
+    .stock-alert {
+        background-color: #ffebee; /* Rojo suave */
+        color: #c62828;
+        font-weight: bold;
+    }
+</style>
+
+<div class="container-fluid bg-light min-vh-100 p-0">
+
+    <div class="admin-header shadow-sm d-flex flex-column align-items-stretch">
+        <div class="mb-3">
+            <h2 class="fw-bold mb-0 text-dark" style="font-family: 'Arial Black';">ADMINISTRACIÓN</h2>
+            <p class="text-muted mb-0">Control de Inventario - Admin</p>
+        </div>
+
+        <!-- NAVEGACIÓN UNIFICADA -->
+        <partial name="_AdminNav" />
+    </div>
+
+    <div class="container mt-4">
+
+        @if (TempData["Mensaje"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fa-solid fa-check-circle me-2"></i> @TempData["Mensaje"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fa-solid fa-triangle-exclamation me-2"></i> @TempData["Error"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                    <div class="card-header bg-white py-3">
+                        <div class="row g-3 align-items-center">
+                            <div class="col-md-4">
+                                <h5 class="fw-bold mb-0">📦 Stock de Ingredientes</h5>
+                            </div>
+                            <div class="col-md-4">
+                                <form asp-action="Index" method="get">
+                                    <div class="input-group">
+                                        <input type="text" name="search" class="form-control" placeholder="Buscar ingrediente..." value="@ViewBag.SearchTerm">
+                                        <button class="btn btn-outline-secondary" type="submit">
+                                            <i class="fa-solid fa-magnifying-glass"></i>
+                                        </button>
+                                        @if (!string.IsNullOrEmpty(ViewBag.SearchTerm))
+                                        {
+                                            <a asp-action="Index" class="btn btn-outline-danger" title="Limpiar filtro">
+                                                <i class="fa-solid fa-xmark"></i>
+                                            </a>
+                                        }
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="col-md-4 text-md-end">
+                                <a asp-action="Historial" class="btn btn-outline-dark fw-bold btn-sm me-2">
+                                    <i class="fa-solid fa-clock-rotate-left me-1"></i> Historial
+                                </a>
+                                <button type="button" class="btn btn-primary fw-bold btn-sm" data-bs-toggle="modal" data-bs-target="#modalNuevoIngrediente">
+                                    <i class="fa-solid fa-plus me-1"></i> Nuevo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead class="bg-light text-muted small text-uppercase">
+                                <tr>
+                                    <th class="ps-4">Ingrediente</th>
+                                    <th class="text-center">Stock Actual</th>
+                                    <th class="text-center">Mínimo</th>
+                                    <th class="text-center">Estado</th>
+                                    <th class="text-end pe-4">Ajuste Rápido</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model)
+                                {
+                                    bool lowStock = item.Cantidad <= item.StockMinimo;
+                                    <tr class="@(lowStock ? "stock-alert" : "")">
+                                        <td class="ps-4">
+                                            <div class="d-flex align-items-center justify-content-between pe-3">
+                                                <div class="fw-bold">@item.Nombre</div>
+                                                <div class="d-flex gap-2 align-items-center">
+                                                    <button class="btn btn-link text-secondary p-0" title="Editar Detalles"
+                                                            onclick="abrirEditarIngrediente(@item.Id, '@item.Nombre', '@item.Unidad', @item.StockMinimo.ToString(System.Globalization.CultureInfo.InvariantCulture))">
+                                                        <i class="fa-solid fa-pen-to-square"></i>
+                                                    </button>
+                                                    <form asp-action="EliminarIngrediente" asp-route-id="@item.Id" method="post" class="d-inline" onsubmit="return confirm('¿Estás seguro de ELIMINAR @item.Nombre del inventario?');">
+                                                        <button class="btn btn-link text-danger p-0 border-0 bg-transparent" title="Eliminar Ingrediente">
+                                                            <i class="fa-solid fa-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="d-flex justify-content-center align-items-baseline gap-1">
+                                                <span class="fs-5 fw-bold text-end" style="min-width: 60px;" id="stock-@item.Id">@item.Cantidad.ToString("0.##")</span>
+                                                <small class="text-muted text-start" style="width: 60px; line-height: 1;">@item.Unidad</small>
+                                            </div>
+                                        </td>
+                                        <td class="text-center text-muted">
+                                            @item.StockMinimo.ToString("0.##")
+                                        </td>
+                                        <td class="text-center">
+                                            @if (lowStock)
+                                            {
+                                                <span class="badge bg-danger">¡BAJO STOCK!</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success bg-opacity-10 text-success">OK</span>
+                                            }
+                                        </td>
+                                        <td class="text-end pe-4">
+                                            <!-- AJAX STOCK ADJUSTMENT -->
+                                            <div class="d-inline-flex align-items-center gap-2">
+                                                <input type="number" id="qty-@item.Id" value="1" min="0.1" step="0.1" class="form-control form-control-sm" style="width: 70px;" />
+                                                
+                                                <button onclick="actualizarStock(@item.Id, 'sumar')" class="btn btn-outline-success btn-sm" title="Agregar Stock">
+                                                    <i class="fa-solid fa-plus"></i>
+                                                </button>
+                                                <button onclick="actualizarStock(@item.Id, 'restar')" class="btn btn-outline-danger btn-sm" title="Reducir Stock">
+                                                    <i class="fa-solid fa-minus"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- PAGINATION CONTROLS -->
+        @if (ViewBag.TotalPages > 1)
+        {
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    <!-- PREVIOUS -->
+                    <li class="page-item @(ViewBag.CurrentPage == 1 ? "disabled" : "")">
+                        <a class="page-link" asp-action="Index" asp-route-page="@(ViewBag.CurrentPage - 1)" asp-route-search="@ViewBag.SearchTerm" aria-label="Previous">
+                            <span aria-hidden="true">&laquo; Anterior</span>
+                        </a>
+                    </li>
+
+                    <!-- PAGE INFO -->
+                    <li class="page-item disabled">
+                        <span class="page-link text-muted">
+                            Página @ViewBag.CurrentPage de @ViewBag.TotalPages
+                        </span>
+                    </li>
+
+                    <!-- NEXT -->
+                    <li class="page-item @(ViewBag.CurrentPage == ViewBag.TotalPages ? "disabled" : "")">
+                        <a class="page-link" asp-action="Index" asp-route-page="@(ViewBag.CurrentPage + 1)" asp-route-search="@ViewBag.SearchTerm" aria-label="Next">
+                            <span aria-hidden="true">Siguiente &raquo;</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        }
+
+    </div>
+</div>
+
+<!-- Modal Nuevo Ingrediente -->
+<div class="modal fade" id="modalNuevoIngrediente" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Agregar Nuevo Ingrediente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="AgregarIngrediente" method="post">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre del Ingrediente</label>
+                        <input type="text" name="nombre" class="form-control" required placeholder="Ej. Azafrán" />
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Cantidad Inicial</label>
+                            <input type="number" name="cantidad" step="0.01" min="0" class="form-control" required value="0" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Unidad</label>
+                             <select name="unidad" class="form-select">
+                                <option value="unidad">Unidad(es)</option>
+                                <option value="kg">Kilogramos (kg)</option>
+                                <option value="litros">Litros (L)</option>
+                                <option value="libras">Libras (lb)</option>
+                                <option value="atados">Atados</option>
+                                <option value="botellas">Botellas</option>
+                                <option value="latas">Latas</option>
+                                <option value="bolsas">Bolsas</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Stock Mínimo (Alerta)</label>
+                        <input type="number" name="stockMinimo" step="0.01" min="0.1" class="form-control" required value="1" />
+                        <div class="form-text">Se mostrará alerta si baja de esta cantidad.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary fw-bold">Guardar Ingrediente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Ingrediente -->
+<div class="modal fade" id="modalEditarIngrediente" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Editar Ingrediente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="EditarIngrediente" method="post">
+                <input type="hidden" name="id" id="editId" />
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre</label>
+                        <input type="text" name="nombre" id="editNombre" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Unidad de Medida</label>
+                         <select name="unidad" id="editUnidad" class="form-select">
+                            <option value="unidad">Unidad(es)</option>
+                            <option value="kg">Kilogramos (kg)</option>
+                            <option value="litros">Litros (L)</option>
+                            <option value="libras">Libras (lb)</option>
+                            <option value="atados">Atados</option>
+                            <option value="botellas">Botellas</option>
+                            <option value="latas">Latas</option>
+                            <option value="bolsas">Bolsas</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Stock Mínimo</label>
+                        <input type="number" name="stockMinimo" id="editStockMinimo" step="0.01" min="0.1" class="form-control" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary fw-bold">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function abrirEditarIngrediente(id, nombre, unidad, stockMinimo) {
+        document.getElementById('editId').value = id;
+        document.getElementById('editNombre').value = nombre;
+        document.getElementById('editStockMinimo').value = stockMinimo;
+        
+        // Seleccionar la unidad correcta en el dropdown
+        var select = document.getElementById('editUnidad');
+        select.value = unidad;
+        
+        var myModal = new bootstrap.Modal(document.getElementById('modalEditarIngrediente'));
+        myModal.show();
+    }
+
+    // --- LOGICA AJAX PARA ACTUALIZAR STOCK ---
+    async function actualizarStock(id, operacion) {
+        // Obtener cantidad del input correspondiente
+        const qtyInput = document.getElementById(`qty-${id}`);
+        const cantidad = qtyInput.value;
+
+        if (!cantidad || cantidad <= 0) {
+            mostrarToast("Por favor, ingresa una cantidad válida.", "warning");
+            return;
+        }
+
+        try {
+            const formData = new URLSearchParams();
+            formData.append('id', id);
+            formData.append('cantidad', cantidad);
+            formData.append('operacion', operacion);
+
+            const response = await fetch('/AdminInventario/ActualizarStock', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Actualizar número en pantalla con animación
+                const stockSpan = document.getElementById(`stock-${id}`);
+                stockSpan.innerText = parseFloat(data.nuevoTotal).toFixed(2); // Formato bonito
+                
+                // Efecto visual de actualización (parpadeo verde)
+                stockSpan.style.transition = "color 0.3s";
+                stockSpan.style.color = "#198754"; // Green
+                setTimeout(() => { stockSpan.style.color = ""; }, 500);
+
+                mostrarToast(data.mensaje, "success");
+            } else {
+                mostrarToast(data.message, "danger");
+            }
+
+        } catch (error) {
+            console.error(error);
+            mostrarToast("Error de conexión al actualizar stock.", "danger");
+        }
+    }
+
+    function mostrarToast(mensaje, tipo) {
+        // Reutilizar el toast container si existe, sino crear
+        let container = document.getElementById('toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toast-container';
+            container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+            container.style.zIndex = '1100';
+            document.body.appendChild(container);
+        }
+
+        const icon = tipo === 'success' ? 'fa-check-circle' : tipo === 'warning' ? 'fa-exclamation-circle' : 'fa-circle-exclamation';
+        const colorClass = tipo === 'warning' ? 'text-dark bg-warning' : `text-white bg-${tipo}`;
+
+        const toastHtml = `
+            <div class="toast align-items-center ${colorClass} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body fs-6 fw-bold">
+                        <i class="fa-solid ${icon} me-2"></i>
+                        ${mensaje}
+                    </div>
+                    <button type="button" class="btn-close ${tipo === 'warning' ? '' : 'btn-close-white'} me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        `;
+
+        const toastElement = document.createElement('div');
+        toastElement.innerHTML = toastHtml;
+        container.appendChild(toastElement.firstElementChild);
+
+        const toastEl = container.lastElementChild;
+        const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+        toast.show();
+
+        toastEl.addEventListener('hidden.bs.toast', () => {
+            toastEl.remove();
+        });
+    }
+</script>

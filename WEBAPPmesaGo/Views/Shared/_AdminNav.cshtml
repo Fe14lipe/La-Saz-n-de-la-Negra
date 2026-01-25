@@ -1,0 +1,67 @@
+@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+    var currentEstado = ViewData["EstadoActual"] as string;
+
+    string IsActive(string ctrl, string act = null, string estado = null)
+    {
+        bool ctrlMatch = currentController == ctrl;
+        bool actMatch = act == null || currentAction == act;
+        bool estadoMatch = estado == null || currentEstado == estado;
+
+        if (ctrlMatch && actMatch && estadoMatch)
+        {
+            return "btn-dark"; // Active Style (Black)
+        }
+        return "btn-outline-dark"; // Inactive Style (White/Outline)
+    }
+}
+
+<div class="d-flex flex-wrap gap-2 mb-4 justify-content-start overflow-auto pb-2" style="white-space: nowrap;">
+    <!-- DASHBOARD -->
+    <a asp-controller="AdminDashboard" asp-action="Index" class="btn @IsActive("AdminDashboard") rounded-pill fw-bold">
+        DASHBOARD
+    </a>
+
+    <!-- CUPONES -->
+    <a asp-controller="AdminCupones" asp-action="Index" class="btn @IsActive("AdminCupones") rounded-pill fw-bold">
+        CUPONES
+    </a>
+
+    <!-- GESTIÓN DE MENÚ -->
+    <a asp-controller="AdminMenu" asp-action="Index" class="btn @IsActive("AdminMenu") rounded-pill fw-bold">
+        GESTIÓN DE MENÚ
+    </a>
+
+    <!-- INVENTARIO -->
+    <a asp-controller="AdminInventario" asp-action="Index" class="btn @IsActive("AdminInventario") rounded-pill fw-bold">
+        INVENTARIO
+    </a>
+
+    <!-- CLIENTES -->
+    <a asp-controller="AdminClientes" asp-action="Index" class="btn @IsActive("AdminClientes") rounded-pill fw-bold">
+        CLIENTES
+    </a>
+
+    <!-- RESERVAS PENDIENTES -->
+    <a asp-controller="AdminReservas" asp-action="Index" asp-route-estado="Pendiente" class="btn @IsActive("AdminReservas", "Index", "Pendiente") rounded-pill fw-bold">
+        PENDIENTES
+    </a>
+
+    <!-- RESERVAS CONFIRMADAS -->
+    <a asp-controller="AdminReservas" asp-action="Index" asp-route-estado="Confirmada" class="btn @IsActive("AdminReservas", "Index", "Confirmada") rounded-pill fw-bold">
+        CONFIRMADAS
+    </a>
+
+    <!-- RESERVAS CANCELADAS -->
+    <a asp-controller="AdminReservas" asp-action="Index" asp-route-estado="Cancelada" class="btn @IsActive("AdminReservas", "Index", "Cancelada") rounded-pill fw-bold">
+        CANCELADAS
+    </a>
+
+    <!-- HISTORIAL (TODAS) -->
+    <a asp-controller="AdminReservas" asp-action="Index" asp-route-estado="Todas" class="btn @IsActive("AdminReservas", "Index", "Todas") rounded-pill fw-bold">
+        HISTORIAL DE RESERVAS
+    </a>
+
+
+</div>

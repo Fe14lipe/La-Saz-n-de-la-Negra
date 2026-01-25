@@ -1,0 +1,108 @@
+@model IEnumerable<WEBAPPmesaGo.Models.MovimientoInventario>
+
+@{
+    ViewData["Title"] = "Historial de Inventario";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>📜 Historial de Movimientos</h2>
+        <div>
+            @if (Model.Any())
+            {
+                <form asp-action="LimpiarHistorial" method="post" class="d-inline me-2" onsubmit="return confirm('¿Seguro que quieres BORRAR todo el historial?');">
+                    <button class="btn btn-outline-danger">
+                        <i class="fa-solid fa-trash-can"></i> Limpiar Historial
+                    </button>
+                </form>
+            }
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="fa-solid fa-arrow-left"></i> Volver al Inventario
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body accordion" id="accordionHistorial">
+            @* GROUP BY TRANSACTION (Fecha + Detalle) *@
+            @foreach (var grupo in Model.GroupBy(x => new { x.Fecha, x.Detalle, x.Tipo }).OrderByDescending(g => g.Key.Fecha))
+            {
+                var esVenta = grupo.Key.Tipo == "Venta";
+                var uniqueId = "grp-" + grupo.Key.Fecha.Ticks;
+
+                @if (esVenta && grupo.Count() > 1) 
+                {
+                    <!-- FOLDER / ACORDEÓN PARA VENTAS -->
+                    <div class="accordion-item mb-2 border rounded shadow-sm overflow-hidden">
+                        <h2 class="accordion-header" id="heading-@uniqueId">
+                            <button class="accordion-button collapsed bg-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-@uniqueId" aria-expanded="false">
+                                <div class="d-flex w-100 justify-content-between align-items-center me-3">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <span class="badge bg-success rounded-pill px-3"><i class="fa-solid fa-utensils"></i> VENTA</span>
+                                        <div class="d-flex flex-column text-start">
+                                            <span class="fw-bold text-dark fs-6">@grupo.Key.Detalle.Replace("Venta de: ", "")</span>
+                                            <small class="text-muted"><i class="fa-regular fa-clock me-1"></i>@grupo.Key.Fecha.ToString("dd/MM/yyyy HH:mm:ss")</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-secondary fw-bold small">
+                                        @grupo.Count() ingredientes descontados <i class="fa-solid fa-chevron-down ms-2"></i>
+                                    </div>
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="collapse-@uniqueId" class="accordion-collapse collapse" data-bs-parent="#accordionHistorial">
+                            <div class="accordion-body p-0 bg-light">
+                                <table class="table table-sm table-borderless mb-0">
+                                    <thead class="text-muted border-bottom small">
+                                        <tr>
+                                            <th class="ps-4">Ingrediente</th>
+                                            <th class="text-end pe-4">Cantidad Descontada</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in grupo)
+                                        {
+                                            <tr>
+                                                <td class="ps-4">@item.Ingrediente?.Nombre</td>
+                                                <td class="text-end pe-4 text-danger fw-bold">
+                                                    @item.Cantidad.ToString("0.##") <small class="text-muted fw-normal">@item.Ingrediente?.Unidad</small>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <!-- ITEM INDIVIDUAL (AJUSTES O VENTAS SIMPLES) -->
+                    foreach (var item in grupo)
+                    {
+                         <div class="card mb-2 border-0 shadow-sm">
+                            <div class="card-body py-2 d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center gap-3">
+                                    <small class="text-muted" style="width: 130px;">@item.Fecha.ToString("dd/MM/yyyy HH:mm")</small>
+                                    @if(item.Tipo == "Ajuste Manual") {
+                                        <span class="badge bg-warning text-dark" style="width: 100px;">Ajuste</span>
+                                    } else {
+                                        <span class="badge bg-secondary" style="width: 100px;">@item.Tipo</span>
+                                    }
+                                    <div class="d-flex flex-column">
+                                        <span class="fw-bold text-dark">@item.Ingrediente?.Nombre</span>
+                                        <small class="text-muted">@item.Detalle</small>
+                                    </div>
+                                </div>
+                                <div class="fw-bold @(item.Cantidad < 0 ? "text-danger" : "text-success") fs-5">
+                                    @(item.Cantidad > 0 ? "+" : "")@item.Cantidad.ToString("0.##") 
+                                    <small class="fw-normal text-muted fs-6">@item.Ingrediente?.Unidad</small>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            }
+        </div>
+    </div>
+</div>

@@ -1,0 +1,130 @@
+﻿@{
+    ViewData["Title"] = "Reservas";
+}
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin="" />
+
+<style>
+    .locked-card {
+        background-color: #f8f9fa;
+        border: none;
+        border-radius: 15px;
+        text-align: center;
+        padding: 40px 20px;
+    }
+
+    .lock-icon {
+        color: #ffad60;
+        margin-bottom: 20px;
+    }
+
+    /* Contenedor del mapa (SIN IMAGEN DE FONDO) */
+    .map-wrapper {
+        position: relative;
+        background-color: #eee; /* Un gris suave mientras carga el mapa */
+        height: 400px;
+        border-radius: 15px;
+        overflow: hidden;
+    }
+
+    #map {
+        width: 100%;
+        height: 100%;
+        z-index: 1; /* Nivel base */
+    }
+
+    /* Tarjeta flotante CENTRADA */
+    .floating-address-card {
+        position: absolute;
+        top: 50%;
+        left: 50%; /* Centrado horizontal */
+        transform: translate(-50%, -50%); /* Ajuste perfecto al centro */
+        background-color: rgba(255, 255, 255, 0.95); /* Blanco semi-transparente */
+        padding: 1.5rem;
+        border-radius: 1rem;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2); /* Sombra más fuerte para que resalte */
+        text-align: center;
+        width: 260px; /* Ancho fijo para que se vea ordenado */
+        z-index: 1000; /* Siempre encima del mapa */
+        pointer-events: auto; /* Permite hacer clic en el botón */
+    }
+</style>
+
+<div class="container mt-4 mb-5">
+    <div class="menu-tabs mb-4 text-center">
+        <a asp-controller="Portal" asp-action="Menu" class="menu-tab-item text-decoration-none text-muted">NUESTRO MENÚ</a>
+        <span class="menu-tab-item active" style="border-bottom: 4px solid var(--color-primary);">RESERVAS</span>
+        <a asp-controller="Cupones" asp-action="Index" class="menu-tab-item text-decoration-none text-muted">CUPONES</a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-7">
+            <div class="card locked-card shadow-sm h-100 justify-content-center">
+                <div class="card-body">
+                    <h5 class="fw-bold text-dark mb-5 text-start"><i class="fa-solid fa-calendar-plus text-primary me-2"></i> NUEVA RESERVA</h5>
+
+                    <i class="fa-solid fa-lock fa-4x lock-icon"></i>
+
+                    <h4 class="fw-bold mt-3">Inicia sesión para reservar</h4>
+                    <p class="text-muted mb-4">Necesitamos tus datos para poder contactarte y confirmar tu mesa.</p>
+
+                    <a asp-action="FormularioReserva" class="btn btn-primary btn-lg rounded-pill px-5 fw-bold text-white shadow-sm">
+                        INICIAR SESIÓN / REGISTRARSE
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-5">
+            <div class="card border-0 shadow-sm mb-4 rounded-4 bg-light">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold text-dark mb-3">MIS RESERVAS</h5>
+                    <div class="text-center text-muted py-4 bg-white rounded-3 border border-dashed">
+                        <em>Inicia sesión para ver tu historial de reservas.</em>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-body p-0">
+
+                    <div class="map-wrapper">
+                        <div id="map"></div>
+
+                        <div class="floating-address-card">
+                            <i class="fa-solid fa-location-dot fa-2x text-primary mb-2"></i>
+                            <h6 class="fw-bold mb-1 lh-sm">Av. Portugal y República del Salvador</h6>
+                            <small class="text-muted d-block mb-3">QUITO - ECUADOR</small>
+
+                            <a href="https://www.google.com/maps/search/?api=1&query=Av.+Portugal+y+República+del+Salvador,+Quito" target="_blank" class="btn btn-sm btn-primary rounded-pill px-4 fw-bold w-100">
+                                CÓMO LLEGAR
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""></script>
+
+<script>
+    // Coordenadas exactas
+    var latitud = -0.1817303;
+    var longitud = -78.4803087;
+
+    var map = L.map('map', { zoomControl: false }).setView([latitud, longitud], 16);
+
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+
+    L.marker([latitud, longitud]).addTo(map);
+</script>
